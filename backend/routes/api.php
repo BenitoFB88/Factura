@@ -17,6 +17,10 @@ Route::get('/hola', function () {
     return response()->json(['mensaje' => 'Hola desde Laravel 5.7 🐘']);
 });
 
+Route::get('/ping', function () {
+    return response()->json(['message' => 'pong desde la API'], 200);
+});
+
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
