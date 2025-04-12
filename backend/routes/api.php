@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\ApiLoginController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +14,10 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+//Ruta Desprotegida para crear usuarios
+Route::post('/registrar',[RegisterController::class, 'registrar']);
+Route::post('/login', [ApiLoginController::class, 'login']);
 
 
 Route::get('/prueba', 'ConsumoBBDDController@prueba');

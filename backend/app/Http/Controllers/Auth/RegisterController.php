@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
@@ -68,5 +70,34 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+    }
+
+    public function registroUsuario(Request $request){
+        try{
+            //validamos los dtos del request
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|min:6',
+            ]);
+    
+            // Crear el usuario en la tabla users
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+            //devolvemos exito
+            return response()->json([
+                'message' => 'Usuario creado correctamente.',
+                'user' => $user,
+            ], 201);
+        }catch(\Exception $e){
+            Log::Error('Error al registrar usuario '.$e);
+            return response()->json([
+                'message' => 'Error al intentar registar Usuario '
+            ], 400);
+        }
+        
     }
 }
