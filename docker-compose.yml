@@ -46,6 +46,7 @@ services:
     networks:
       - app-network
 
+<<<<<<< HEAD
   frontend:
     build:
       context: ./frontend
@@ -58,6 +59,8 @@ services:
     depends_on:
       - app
 
+=======
+>>>>>>> PRODUCTIVA
 volumes:
   dbdata:
 

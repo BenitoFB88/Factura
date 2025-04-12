@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 |
 */
 
+
+Route::get('/prueba', 'ConsumoBBDDController@prueba');
+
 Route::get('/hola', function () {
     return response()->json(['mensaje' => 'Hola desde Laravel 5.7 🐘']);
 });
