@@ -21,7 +21,7 @@ Route::post('/login', 'Auth\LoginController@login');
 
 
 // Route::post('/registrar', 'Auth\RegisterController@registroUsuario');
-Route::post('/login', [ApiLoginController::class, 'login']);
+// Route::post('/login', [ApiLoginController::class, 'login']);
 
 
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
