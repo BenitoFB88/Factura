@@ -16,7 +16,11 @@ use App\Http\Controllers\Auth\ApiLoginController;
 */
 
 //Ruta Desprotegida para crear usuarios
-Route::post('/registrar',[RegisterController::class, 'registrar']);
+Route::post('/login', 'Auth\LoginController@login');
+// Route::post('/registrar', 'Auth\RegisterController@registroUsuario');
+
+
+// Route::post('/registrar', 'Auth\RegisterController@registroUsuario');
 Route::post('/login', [ApiLoginController::class, 'login']);
 
 
@@ -28,4 +32,10 @@ Route::get('/hola', function () {
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware(['auth:api'])->group(function(){
+    //Grupo de rutas protegidas
+    Route::post('/registrar', 'Auth\RegisterController@registroUsuario');
+
 });

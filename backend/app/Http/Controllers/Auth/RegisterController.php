@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
@@ -92,6 +92,7 @@ class RegisterController extends Controller
                 'message' => 'Usuario creado correctamente.',
                 'user' => $user,
             ], 201);
+
         }catch(\Exception $e){
             Log::Error('Error al registrar usuario '.$e);
             return response()->json([
