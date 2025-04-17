@@ -19,8 +19,10 @@ Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 
 
 Route::get('/hola', function () {
-    return response()->json(['mensaje' => 'Hola desde Laravel 5.7 🐘']);
+    return response()->json(['mensaje' => '¡Hola desde Laravel!']);
 });
+
+
 
 //rutas protegeidas
 Route::middleware(['auth:api'])->group(function () {

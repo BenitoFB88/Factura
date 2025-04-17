@@ -1,5 +1,6 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost';  // URL del backend de Laravel
+// Configura la URL base de la API
+axios.defaults.baseURL = 'http://localhost'; // Ajusta esta URL si tu backend está en otro puerto o dominio
 
 export default axios;
