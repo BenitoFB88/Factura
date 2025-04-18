@@ -1,6 +1,23 @@
+// src/axios.js
 import axios from 'axios';
 
-// Configura la URL base de la API
-axios.defaults.baseURL = 'http://localhost'; // Ajusta esta URL si tu backend está en otro puerto o dominio
+const instance = axios.create({
+  baseURL: 'http://localhost', // Ajusta si es necesario
+});
 
-export default axios;
+// Interceptor para agregar el token automáticamente
+instance.interceptors.request.use(
+  (config) => {
+    const auth = localStorage.getItem('auth');
+    if (auth) {
+      const token = JSON.parse(auth).access_token;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export default instance;

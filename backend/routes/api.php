@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Auth\ApiLoginController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 
 /*
@@ -19,9 +19,8 @@ Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 
 
 Route::get('/hola', function () {
-    return response()->json(['mensaje' => '¡Hola desde Laravel!']);
+    return response()->json(['mensaje' => '¡Bienvenido a iHosting!']);
 });
-
 
 
 //rutas protegeidas
@@ -35,3 +34,5 @@ Route::middleware(['auth:api'])->group(function () {
     // Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 //
 });
+
+

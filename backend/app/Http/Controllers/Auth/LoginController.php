@@ -42,7 +42,17 @@ class LoginController extends Controller
         Log::info('[LOGIN] Datos recibidos:', $request->all());
 
         $client = new Client();
+        // Verifica si la URL está bien formada
         $url = env('APP_URL') . '/oauth/token';
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return response()->json([
+                'message' => 'La URL no es válida',
+                'url' => $url
+            ], 400);
+        }
+
+        Log::info('[LOGIN] URL de solicitud:', ['url' => $url]);
+
 
         $formParams = [
             'grant_type' => 'password',

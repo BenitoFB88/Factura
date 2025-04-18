@@ -5,22 +5,28 @@
     <main class="main-content">
       <div class="login-box">
         <h2>Iniciar Sesión</h2>
-        <input type="text" placeholder="Usuario" />
-
-        <!-- Campo de contraseña con el ícono al lado derecho -->
+        <input v-model="email" type="text" placeholder="Usuario" />
         <div class="password-container">
-          <input
-            placeholder="Contraseña"
-          />
-         
+          <input v-model="password" type="password" placeholder="Contraseña" />
         </div>
 
-        <button @click="irADashboard">Ingresar</button>
+        <button @click="login" :disabled="cargando">
+          {{ cargando ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+
+        <!-- Spinner debajo del botón -->
+        <div v-if="cargando" class="spinner"></div>
+
         <p class="respuesta" v-if="mensaje">{{ mensaje }}</p>
       </div>
     </main>
 
     <footer class="footer">© 2025 iHosting</footer>
+
+    <!-- Popup de éxito -->
+    <div v-if="mostrarPopup" class="popup">
+      ¡Inicio de sesión exitoso!
+    </div>
   </div>
 </template>
 
@@ -31,12 +37,14 @@ export default {
   name: 'LoginPage',
   data() {
     return {
+      email: '',
+      password: '',
       mensaje: '',
-      passwordVisible: false, // Controla la visibilidad de la contraseña
+      cargando: false,
+      mostrarPopup: false,
     };
   },
   mounted() {
-    // Realiza la solicitud a la API cuando el componente se monta
     axios.get('/api/hola')
       .then(response => {
         this.mensaje = response.data.mensaje;
@@ -46,12 +54,36 @@ export default {
       });
   },
   methods: {
-    irADashboard() {
-      this.$router.push('/dashboard');
-    },
-    togglePasswordVisibility() {
-      this.passwordVisible = !this.passwordVisible; // Alterna la visibilidad de la contraseña
-    },
+    async login() {
+      this.cargando = true;
+      this.mensaje = '';
+
+      try {
+        const response = await axios.post('/api/login', {
+          email: this.email,
+          password: this.password,
+        });
+
+        localStorage.setItem('auth', JSON.stringify({
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token,
+          token_type: response.data.token_type,
+          expires_in: response.data.expires_in
+        }));
+
+        this.mostrarPopup = true;
+
+        setTimeout(() => {
+          this.$router.push('/dashboard');
+        }, 1000);
+
+      } catch (error) {
+        this.mensaje = 'Credenciales incorrectas o error al iniciar sesión.';
+        console.error(error);
+      } finally {
+        this.cargando = false;
+      }
+    }
   },
 };
 </script>
@@ -60,7 +92,7 @@ export default {
 body {
   margin: 0;
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  background-color: #e0f7fa; /* Celeste claro */
+  background-color: #e0f7fa;
 }
 
 #app {
@@ -70,7 +102,7 @@ body {
 }
 
 .banner {
-  background-color: #00bcd4; /* Celeste fuerte */
+  background-color: #00bcd4;
   color: white;
   text-align: center;
   padding: 1rem;
@@ -99,6 +131,7 @@ body {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   width: 300px;
   text-align: center;
+  position: relative; /* Necesario para el popup */
 }
 
 .login-box h2 {
@@ -123,7 +156,6 @@ body {
   width: 100%;
 }
 
-
 .login-box button {
   width: 100%;
   padding: 0.5rem;
@@ -139,9 +171,67 @@ body {
   background-color: #0097a7;
 }
 
+.login-box button:disabled {
+  background-color: #80deea;
+  cursor: not-allowed;
+}
+
 .respuesta {
   margin-top: 1rem;
   font-size: 0.9rem;
-  color: #4caf50;
+  color: #f44336;
+}
+
+/* Spinner */
+.spinner {
+  position: absolute;
+  top: 100%; /* Posicionar justo debajo del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid rgba(0, 188, 212, 0.3); /* Celeste claro */
+  border-top: 4px solid #00bcd4; /* Celeste más oscuro */
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Popup */
+.popup {
+  position: absolute;
+  top: -50px; /* Ajusta para que se posicione sobre el formulario */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4caf50;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  animation: fadeInOut 2s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 }
 </style>
