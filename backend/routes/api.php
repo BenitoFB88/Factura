@@ -15,7 +15,7 @@ use App\Http\Controllers\Auth\RegisterController;
 // Ruta pública para login
 Route::post('/login', 'Auth\LoginController@login');
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
-Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
+//Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 
 
 Route::get('/hola', function () {
@@ -30,6 +30,6 @@ Route::middleware(['auth:api'])->group(function () {
         return $request->user();
     });
 
-    // Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
+     Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 //
 });

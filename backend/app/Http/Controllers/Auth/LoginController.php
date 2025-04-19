@@ -42,12 +42,14 @@ class LoginController extends Controller
         Log::info('[LOGIN] Datos recibidos:', $request->all());
 
         $client = new Client();
-        $url = env('APP_URL') . '/oauth/token';
 
+        $url = config('app.url') . '/oauth/token';
+        Log::info('url: '.$url);
+        
         $formParams = [
             'grant_type' => 'password',
-            'client_id' => env('PASSPORT_CLIENT_ID'),
-            'client_secret' => env('PASSPORT_CLIENT_SECRET'),
+            'client_id' => config('services.passport.client_id'),
+            'client_secret' => config('services.passport.client_secret'),
             'username' => $request->input('email'),
             'password' => $request->input('password'),
             'scope' => '',
