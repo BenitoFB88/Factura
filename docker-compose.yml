@@ -9,7 +9,7 @@ services:
     volumes:
       - ./backend:/var/www
     ports:
-      - "9000:9000"
+      - "9000:9000"  # Este puerto sigue mapeado para la comunicación con PHP-FPM
     networks:
       - app-network
     depends_on:
@@ -34,8 +34,9 @@ services:
   nginx:
     image: nginx:latest
     container_name: nginx_server
+    restart: always
     ports:
-      - "80:81"
+      - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./backend:/var/www

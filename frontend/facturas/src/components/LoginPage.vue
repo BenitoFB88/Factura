@@ -4,20 +4,22 @@
 
     <main class="main-content">
       <div class="login-box">
-        <h2>Iniciar Sesión</h2>
-        <input v-model="email" type="text" placeholder="Usuario" />
-        <div class="password-container">
-          <input v-model="password" type="password" placeholder="Contraseña" />
-        </div>
+        <form @submit.prevent="login">
+          <h2>Iniciar Sesión</h2>
+          <input v-model="email" type="text" placeholder="Usuario" />
+          <div class="password-container">
+            <input v-model="password" type="password" placeholder="Contraseña" />
+          </div>
 
-        <button @click="login" :disabled="cargando">
-          {{ cargando ? 'Ingresando...' : 'Ingresar' }}
-        </button>
+          <button type="submit" :disabled="cargando">
+            {{ cargando ? 'Ingresando...' : 'Ingresar' }}
+          </button>
 
-        <!-- Spinner debajo del botón -->
-        <div v-if="cargando" class="spinner"></div>
+          <!-- Spinner debajo del botón -->
+          <div v-if="cargando" class="spinner"></div>
 
-        <p class="respuesta" v-if="mensaje">{{ mensaje }}</p>
+          <p class="respuesta" v-if="mensaje">{{ mensaje }}</p>
+        </form>
       </div>
     </main>
 
@@ -29,6 +31,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import axios from '../axios';
@@ -131,7 +134,7 @@ body {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   width: 300px;
   text-align: center;
-  position: relative; /* Necesario para el popup */
+  position: relative;
 }
 
 .login-box h2 {
@@ -182,18 +185,15 @@ body {
   color: #f44336;
 }
 
-/* Spinner */
+/* Spinner reutilizado de la búsqueda */
 .spinner {
-  position: absolute;
-  top: 100%; /* Posicionar justo debajo del botón */
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid rgba(0, 188, 212, 0.3); /* Celeste claro */
-  border-top: 4px solid #00bcd4; /* Celeste más oscuro */
+  border: 6px solid rgba(0, 188, 212, 0.3);
+  border-top: 6px solid #00bcd4;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 50px;
+  height: 50px;
   animation: spin 1s linear infinite;
+  margin: 20px auto 0;
 }
 
 @keyframes spin {
@@ -203,35 +203,35 @@ body {
 
 /* Popup */
 .popup {
-  position: absolute;
-  top: -50px; /* Ajusta para que se posicione sobre el formulario */
+  position: fixed;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   background-color: #4caf50;
   color: white;
   padding: 1rem 1.5rem;
   border-radius: 5px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 999;
+  z-index: 9999;
   animation: fadeInOut 2s ease-in-out forwards;
 }
 
 @keyframes fadeInOut {
   0% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translate(-50%, -60%);
   }
   10% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, -50%);
   }
   90% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, -50%);
   }
   100% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translate(-50%, -40%);
   }
 }
 </style>

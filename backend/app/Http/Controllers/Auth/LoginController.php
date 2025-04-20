@@ -12,38 +12,29 @@ class LoginController extends Controller
 {
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
     protected $redirectTo = '/home';
 
-    /**
-     * Create a new controller instance.
-     */
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
     }
 
-    /**
-     * Handle a login request to the application and issue a Passport token.
-     */
     public function login(Request $request)
     {
-        // Validación básica (puedes descomentar si necesitas validar)
-        // $request->validate([
-        //     'email' => 'required|email',
-        //     'password' => 'required',
-        // ]);
+        $email = $request->input('email') ?? $request->json('email');
+        $password = $request->input('password') ?? $request->json('password');
 
-        // Log de datos recibidos
-        Log::info('[LOGIN] Datos recibidos:', $request->all());
+        $request->merge(['email' => $email, 'password' => $password]);
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        Log::info('[LOGIN] Datos recibidos:', ['email' => $email]);
 
         $client = new Client();
-        // Verifica si la URL está bien formada
         $url = env('APP_URL') . '/oauth/token';
+
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
             return response()->json([
                 'message' => 'La URL no es válida',
@@ -53,18 +44,16 @@ class LoginController extends Controller
 
         Log::info('[LOGIN] URL de solicitud:', ['url' => $url]);
 
-
         $formParams = [
             'grant_type' => 'password',
             'client_id' => env('PASSPORT_CLIENT_ID'),
             'client_secret' => env('PASSPORT_CLIENT_SECRET'),
-            'username' => $request->input('email'),
-            'password' => $request->input('password'),
+            'username' => $email,
+            'password' => $password,
             'scope' => '',
         ];
 
         try {
-            // Log de payload
             Log::info('[LOGIN] Enviando solicitud a Passport', [
                 'url' => $url,
                 'payload' => $formParams
@@ -76,26 +65,27 @@ class LoginController extends Controller
 
             $body = json_decode((string) $response->getBody(), true);
 
-            // Log de respuesta
             Log::info('[LOGIN] Respuesta exitosa:', $body);
 
             return response()->json($body);
 
         } catch (\GuzzleHttp\Exception\ClientException $e) {
-            // Log para errores 400
+            // Captura de errores 400
             $responseBody = $e->getResponse()->getBody()->getContents();
             Log::error('[LOGIN] Error 400 - Bad Request', [
                 'message' => $e->getMessage(),
                 'response' => $responseBody,
                 'payload' => $formParams
             ]);
+
             return response()->json([
                 'message' => 'Error en la solicitud de token',
-                'details' => json_decode($responseBody, true)
+                'details' => json_decode($responseBody, true),
+                'response_code' => $e->getResponse()->getStatusCode() // Agregado el código de estado de la respuesta
             ], 400);
 
         } catch (\Exception $e) {
-            // Log para otros errores
+            // Captura de otros errores
             Log::error('[LOGIN] Error inesperado', [
                 'message' => $e->getMessage(),
                 'payload' => $formParams
