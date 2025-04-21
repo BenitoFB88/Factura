@@ -1,54 +1,99 @@
 <template>
   <div class="container">
-    <!-- Formulario de Búsqueda -->
+    <!-- Formulario de búsqueda de facturas -->
     <form @submit.prevent="searchInvoices" class="search-form">
+      <!-- Campo: Fecha (con clase de error si hay error) -->
       <div class="form-group">
         <label for="fecha">Fecha:</label>
-        <input type="date" v-model="searchParams.fecha" id="fecha" class="form-control">
+        <input
+          type="date"
+          v-model="searchParams.fecha"
+          :class="{ 'is-invalid': errors.fecha }"
+          id="fecha"
+          class="form-control"
+        />
       </div>
+
+      <!-- Campo: Cliente (con clase de error si hay error) -->
       <div class="form-group">
         <label for="cliente">Cliente:</label>
-        <input type="text" v-model="searchParams.cliente" id="cliente" class="form-control">
+        <input
+          type="text"
+          v-model="searchParams.cliente"
+          :class="{ 'is-invalid': errors.cliente }"
+          id="cliente"
+          class="form-control"
+        />
       </div>
+
+      <!-- Campo: Número de Factura (con clase de error si hay error) -->
       <div class="form-group">
         <label for="numero_factura">Número de Factura:</label>
-        <input type="number" v-model="searchParams.numero_factura" id="numero_factura" class="form-control">
+        <input
+          type="number"
+          v-model="searchParams.numero_factura"
+          :class="{ 'is-invalid': errors.numero_factura }"
+          id="numero_factura"
+          class="form-control"
+        />
       </div>
+
+      <!-- Botón de búsqueda -->
       <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 
-    <!-- Icono de carga -->
+    <!-- Spinner de carga mientras se espera la respuesta del backend -->
     <div v-if="loading" class="loading-spinner">
       <i class="fas fa-spinner fa-spin"></i> Cargando...
     </div>
 
-    <!-- Tabla de resultados -->
-    <table v-if="invoices.length > 0" class="table table-striped mt-4">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Emisor</th>
-          <th>Receptor</th>
-          <th>Número de Factura</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="invoice in invoices" :key="invoice.id">
-          <td>{{ invoice.fecha }}</td>
-          <td>{{ invoice.emisor }}</td>
-          <td>{{ invoice.receptor }}</td>
-          <td>{{ invoice.folio }}</td>
-          <td>{{ invoice.total }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Sección de resultados con animación -->
+    <transition name="fade">
+      <div v-if="!loading">
+        <!-- Tabla de resultados si hay facturas -->
+        <table v-if="paginatedInvoices.length > 0" class="table table-striped mt-4">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Emisor</th>
+              <th>Receptor</th>
+              <th>Folio</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="invoice in paginatedInvoices" :key="invoice.id">
+              <td>{{ invoice.fecha || 'Fecha no disponible' }}</td>
+              <td>{{ invoice.emisor || 'Emisor no disponible' }}</td>
+              <td>{{ invoice.receptor || 'Receptor no disponible' }}</td>
+              <td>{{ invoice.folio || 'Folio no disponible' }}</td>
+              <td>{{ invoice.total || 'Total no disponible' }}</td>
+            </tr>
+          </tbody>
+        </table>
 
-    <!-- Mensaje si no hay resultados -->
-    <div v-else class="alert alert-warning mt-4">No se encontraron facturas.</div>
+        <!-- Mensaje si no se encontraron facturas -->
+        <div v-else class="alert alert-warning mt-4">
+          No se encontraron facturas.
+        </div>
 
-    <!-- Error Message -->
-    <div v-if="errorMessage" class="alert alert-danger mt-4">{{ errorMessage }}</div>
+        <!-- Mensaje de error si ocurre un problema -->
+        <div v-if="errorMessage" class="alert alert-danger mt-4">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Botones de paginación -->
+        <div v-if="totalPages > 1" class="pagination mt-4">
+          <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="btn btn-secondary">
+            Anterior
+          </button>
+          <span>Página {{ currentPage }} de {{ totalPages }}</span>
+          <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="btn btn-secondary">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -58,71 +103,126 @@ import axios from 'axios';
 export default {
   data() {
     return {
+      // Datos del formulario de búsqueda
       searchParams: {
         fecha: '',
         cliente: '',
         numero_factura: ''
       },
-      invoices: [],
-      errorMessage: '',
-      loading: false  // Nueva propiedad para manejar el estado de carga
+      allInvoices: [],      // Lista de todas las facturas
+      paginatedInvoices: [],// Facturas paginadas
+      errorMessage: '',     // Mensaje de error
+      loading: false,       // Estado de carga
+      errors: {},           // Errores de validación por campo
+      currentPage: 1,       // Página actual
+      resultsPerPage: 10,   // Resultados por página
+      totalResults: 0,      // Total de resultados
     };
   },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.totalResults / this.resultsPerPage);
+    }
+  },
   methods: {
-    // Función para buscar facturas
+    // Realiza la búsqueda y obtiene todos los resultados de la API
     async searchInvoices() {
+      this.errorMessage = '';
+
+      // Validación previa al envío
+      if (!this.validateForm()) return;
+
       try {
-        // Activar el indicador de carga
         this.loading = true;
 
-        // Verificar que el token esté presente en el localStorage
         const token = localStorage.getItem('access_token');
-        
         if (!token) {
           this.errorMessage = 'Token de autenticación no encontrado.';
+          this.loading = false;
           return;
         }
 
-        // Convertir numero_factura a número, si tiene valor
-        if (this.searchParams.numero_factura) {
-          this.searchParams.numero_factura = parseInt(this.searchParams.numero_factura);
-        }
+        const params = { ...this.searchParams };
 
-        // Hacer la petición GET con los parámetros de búsqueda
         const response = await axios.get('http://localhost/api/invoices/search', {
-          params: this.searchParams,
+          params,
           headers: {
-            'Authorization': `Bearer ${token}` // Agregar el token en los encabezados
+            Authorization: `Bearer ${token}`
           }
         });
 
-        // Mostrar la respuesta en la consola para ver lo que recibe desde el backend
         console.log('Respuesta del backend:', response.data);
 
-        // Asignar las facturas recibidas a la variable invoices
-        this.invoices = response.data;
+        // Verificar que la respuesta contiene un array válido
+        if (Array.isArray(response.data)) {
+          this.allInvoices = response.data;
+          this.totalResults = this.allInvoices.length; // El total de resultados será el largo del array
+          this.currentPage = 1;
 
+          // Paginamos los resultados obtenidos
+          this.paginateInvoices();
+        } else {
+          this.errorMessage = 'Formato de respuesta inesperado de la API.';
+        }
+        
       } catch (error) {
         console.error('Error al realizar la búsqueda:', error);
         this.errorMessage = 'Error al realizar la búsqueda. Intenta nuevamente.';
       } finally {
-        // Desactivar el indicador de carga una vez finalizada la búsqueda
         this.loading = false;
       }
+    },
+
+    // Pagina los resultados guardados en `allInvoices`
+    paginateInvoices() {
+      const start = (this.currentPage - 1) * this.resultsPerPage;
+      const end = start + this.resultsPerPage;
+      
+      // Verificar que `this.allInvoices` es un array
+      if (Array.isArray(this.allInvoices)) {
+        // Paginamos los resultados de `allInvoices` y los asignamos a `paginatedInvoices`
+        this.paginatedInvoices = this.allInvoices.slice(start, end);
+      }
+    },
+
+    // Cambia de página sin realizar nueva consulta al backend
+    goToPage(pageNumber) {
+      if (pageNumber < 1 || pageNumber > this.totalPages) return;
+
+      this.currentPage = pageNumber;
+      
+      // Solo paginamos localmente, no hacemos más consultas
+      this.paginateInvoices();
+    },
+
+    // Valida el formulario de búsqueda
+    validateForm() {
+      this.errors = {};
+
+      const { fecha, cliente, numero_factura } = this.searchParams;
+
+      if (!fecha && !cliente && !numero_factura) {
+        this.errorMessage = 'Debe ingresar al menos un parámetro de búsqueda.';
+        return false;
+      }
+
+      this.errorMessage = '';
+      return true;
     }
   }
 };
 </script>
 
-<style scoped>
-/* Estilos personalizados para el formulario y tabla */
 
+<style scoped>
+/* Contenedor principal */
 .container {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
 }
 
+/* Estilo del formulario */
 .search-form {
   background-color: #f8f9fa;
   padding: 20px;
@@ -134,7 +234,10 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-input[type="date"], input[type="text"], input[type="number"] {
+/* Inputs con estilo base */
+input[type="date"],
+input[type="text"],
+input[type="number"] {
   width: 100%;
   padding: 8px;
   border: 1px solid #ced4da;
@@ -142,6 +245,7 @@ input[type="date"], input[type="text"], input[type="number"] {
   margin-top: 0.5rem;
 }
 
+/* Botón de envío */
 button {
   background-color: #007bff;
   color: white;
@@ -156,6 +260,7 @@ button:hover {
   background-color: #0056b3;
 }
 
+/* Tabla de resultados */
 .table {
   width: 100%;
   margin-top: 2rem;
@@ -164,7 +269,8 @@ button:hover {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #ddd;
@@ -179,6 +285,7 @@ th {
   background-color: #f9f9f9;
 }
 
+/* Alertas */
 .alert {
   border-radius: 5px;
   padding: 15px;
@@ -194,11 +301,48 @@ th {
   color: #721c24;
 }
 
-/* Estilos para el spinner de carga */
+/* Estilo del spinner */
 .loading-spinner {
   text-align: center;
   margin-top: 20px;
   font-size: 24px;
   color: #007bff;
+}
+
+/* Estilo para inputs con errores */
+.is-invalid {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+/* Transiciones */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Estilos de paginación */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  background-color: #f1f1f1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
 }
 </style>

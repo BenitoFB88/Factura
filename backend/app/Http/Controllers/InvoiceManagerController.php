@@ -56,13 +56,10 @@ class InvoiceManagerController extends Controller
             $query->where('folio', $request->numero_factura);
         }
 
-        // Ver la consulta SQL generada
-        \Log::debug('Consulta SQL: ', [$query->toSql()]);
-
-        // Ejecutar la consulta
+        // Obtener todos los resultados sin paginación
         $invoices = $query->orderBy('fecha', 'desc')->get();
 
-        // Retornar las facturas
+        // Retorna todas las facturas sin paginación
         return response()->json($invoices);
     }
 
