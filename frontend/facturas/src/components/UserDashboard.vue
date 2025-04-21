@@ -127,51 +127,55 @@ export default {
   methods: {
     // Realiza la búsqueda y obtiene todos los resultados de la API
     async searchInvoices() {
-      this.errorMessage = '';
+  this.errorMessage = '';
 
-      // Validación previa al envío
-      if (!this.validateForm()) return;
+  // Validación previa al envío
+  if (!this.validateForm()) return;
 
-      try {
-        this.loading = true;
+  try {
+    this.loading = true;
 
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-          this.errorMessage = 'Token de autenticación no encontrado.';
-          this.loading = false;
-          return;
-        }
+    // Obtener el token desde el objeto auth
+    const authData = JSON.parse(localStorage.getItem('auth'));
+    const token = authData?.access_token;
 
-        const params = { ...this.searchParams };
+    if (!token) {
+      this.errorMessage = 'Token de autenticación no encontrado.';
+      this.loading = false;
+      return;
+    }
 
-        const response = await axios.get('http://localhost/api/invoices/search', {
-          params,
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+    const params = { ...this.searchParams };
 
-        console.log('Respuesta del backend:', response.data);
-
-        // Verificar que la respuesta contiene un array válido
-        if (Array.isArray(response.data)) {
-          this.allInvoices = response.data;
-          this.totalResults = this.allInvoices.length; // El total de resultados será el largo del array
-          this.currentPage = 1;
-
-          // Paginamos los resultados obtenidos
-          this.paginateInvoices();
-        } else {
-          this.errorMessage = 'Formato de respuesta inesperado de la API.';
-        }
-        
-      } catch (error) {
-        console.error('Error al realizar la búsqueda:', error);
-        this.errorMessage = 'Error al realizar la búsqueda. Intenta nuevamente.';
-      } finally {
-        this.loading = false;
+    const response = await axios.get('http://localhost/api/invoices/search', {
+      params,
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    },
+    });
+
+    console.log('Respuesta del backend:', response.data);
+
+    // Verificar que la respuesta contiene un array válido
+    if (Array.isArray(response.data)) {
+      this.allInvoices = response.data;
+      this.totalResults = this.allInvoices.length;
+      this.currentPage = 1;
+
+      // Paginamos los resultados obtenidos
+      this.paginateInvoices();
+    } else {
+      this.errorMessage = 'Formato de respuesta inesperado de la API.';
+    }
+    
+  } catch (error) {
+    console.error('Error al realizar la búsqueda:', error);
+    this.errorMessage = 'Error al realizar la búsqueda. Intenta nuevamente.';
+  } finally {
+    this.loading = false;
+  }
+}
+,
 
     // Pagina los resultados guardados en `allInvoices`
     paginateInvoices() {
