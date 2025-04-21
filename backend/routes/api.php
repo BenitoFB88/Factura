@@ -15,7 +15,10 @@ use App\Http\Controllers\Auth\RegisterController;
 // Ruta pública para login
 Route::post('/login', 'Auth\LoginController@login');
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
-//Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
+//ruta no protegida para probar listar factura:
+Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
+//editar facturas
+Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
 
 
 Route::get('/hola', function () {
