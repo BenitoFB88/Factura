@@ -1,8 +1,7 @@
-// src/axios.js
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost', // Ajusta si es necesario
+  baseURL: 'http://localhost:', // Ajusta si es necesario
 });
 
 // Interceptor para agregar el token automáticamente

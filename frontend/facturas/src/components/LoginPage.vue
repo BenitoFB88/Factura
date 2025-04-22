@@ -1,23 +1,39 @@
 <template>
-  <div id="app">
+  <div class="login-page">
     <header class="banner">Gestor Facturas iHosting</header>
 
     <main class="main-content">
       <div class="login-box">
+        <h2>Iniciar Sesión</h2>
         <form @submit.prevent="login">
-          <h2>Iniciar Sesión</h2>
-          <input v-model="email" type="text" placeholder="Usuario" />
-          <div class="password-container">
-            <input v-model="password" type="password" placeholder="Contraseña" />
+          <div class="form-group">
+            <label for="usuario">Usuario</label>
+            <input
+              type="text"
+              id="usuario"
+              v-model="email"
+              placeholder="Ingrese su usuario"
+            />
           </div>
 
-          <button type="submit" :disabled="cargando">
-            {{ cargando ? 'Ingresando...' : 'Ingresar' }}
-          </button>
+          <div class="form-group">
+            <label for="clave">Clave</label>
+            <input
+              type="password"
+              id="clave"
+              v-model="password"
+              placeholder="Ingrese su clave"
+            />
+          </div>
 
-          <!-- Spinner debajo del botón -->
+          <div class="buttons">
+            <button type="submit" :disabled="cargando">
+              {{ cargando ? 'Ingresando...' : 'Iniciar' }}
+            </button>
+            <button type="button" class="cancelar" @click="cancelar">Cancelar</button>
+          </div>
+
           <div v-if="cargando" class="spinner"></div>
-
           <p class="respuesta" v-if="mensaje">{{ mensaje }}</p>
         </form>
       </div>
@@ -25,13 +41,9 @@
 
     <footer class="footer">© 2025 iHosting</footer>
 
-    <!-- Popup de éxito -->
-    <div v-if="mostrarPopup" class="popup">
-      ¡Inicio de sesión exitoso!
-    </div>
+    <div v-if="mostrarPopup" class="popup">¡Inicio de sesión exitoso!</div>
   </div>
 </template>
-
 
 <script>
 import axios from '../axios';
@@ -86,22 +98,22 @@ export default {
       } finally {
         this.cargando = false;
       }
+    },
+    cancelar() {
+      this.email = '';
+      this.password = '';
     }
-  },
+  }
 };
 </script>
 
 <style scoped>
-body {
-  margin: 0;
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  background-color: #e0f7fa;
-}
-
-#app {
+.login-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: linear-gradient(135deg, #dbeeff, #f1f9ff);
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .banner {
@@ -129,63 +141,74 @@ body {
 
 .login-box {
   background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  width: 300px;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
   text-align: center;
-  position: relative;
 }
 
-.login-box h2 {
-  margin-bottom: 1rem;
-  color: #00acc1;
+h2 {
+  color: #1e3a5f;
+  margin-bottom: 30px;
 }
 
-.login-box input {
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #333;
+}
+
+input {
   width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
+  padding: 10px;
+  font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
-.password-container {
-  position: relative;
-  width: 100%;
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.password-container input {
-  width: 100%;
-}
-
-.login-box button {
-  width: 100%;
-  padding: 0.5rem;
-  background-color: #00bcd4;
-  color: white;
+button {
+  padding: 10px 20px;
   border: none;
-  border-radius: 4px;
+  font-size: 14px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
+  transition: background-color 0.3s;
 }
 
-.login-box button:hover {
-  background-color: #0097a7;
+button[type="submit"] {
+  background-color: #0070c9;
+  color: white;
 }
 
-.login-box button:disabled {
+button.cancelar {
+  background-color: #ccc;
+  color: #333;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
   background-color: #80deea;
   cursor: not-allowed;
 }
 
-.respuesta {
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  color: #f44336;
-}
-
-/* Spinner reutilizado de la búsqueda */
 .spinner {
   border: 6px solid rgba(0, 188, 212, 0.3);
   border-top: 6px solid #00bcd4;
@@ -201,7 +224,12 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* Popup */
+.respuesta {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #f44336;
+}
+
 .popup {
   position: fixed;
   top: 50%;
@@ -217,21 +245,9 @@ body {
 }
 
 @keyframes fadeInOut {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -60%);
-  }
-  10% {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
-  90% {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -40%);
-  }
+  0% { opacity: 0; transform: translate(-50%, -60%); }
+  10% { opacity: 1; transform: translate(-50%, -50%); }
+  90% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
 }
 </style>
