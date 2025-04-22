@@ -2,16 +2,14 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: noix1305/laravel_app:latest
     container_name: laravel_app
     restart: unless-stopped
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
     ports:
-      - "9000:9000"
+      - "9000:9000"  # Este puerto sigue mapeado para la comunicación con PHP-FPM
     networks:
       - app-network
     depends_on:
@@ -29,13 +27,14 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     networks:
       - app-network
 
   nginx:
     image: nginx:latest
     container_name: nginx_server
+    restart: always
     ports:
       - "80:80"
     volumes:
