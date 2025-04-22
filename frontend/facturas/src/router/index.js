@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginPage from '../components/LoginPage.vue';
-import UserDashboard from '../components/UserDashboard.vue';
 import ExcelUpload from '../components/ExcelUpload.vue';
 import FacturaDashboard from '@/components/FacturaDashboard.vue';
 
