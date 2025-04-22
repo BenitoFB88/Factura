@@ -6,15 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class DteEmitido extends Model
 {
+    protected $table = 'dte_emitidos';
 
-    protected $table = 'dte_emitidos';  // Nombre de la tabla
-
-    protected $fillable = [
-        'tipo_dte', 'emisor', 'folio', 'fecha', 'receptor', 'mail_receptor', 
-        'mail_sii', 'neto', 'iva', 'total', 'xml', 'track_id', 'revision_estado', 
-        'revision_detalle', 'anulado', 'id_user', 'fma_pago', 'estado_pago', 
-        'notificacion', 'emite_id'
+     // estos son los campos que se pueden editar 
+     //hay que ver si son mas pero creo que solo estos
+     protected $fillable = [
+        'iecuenta',
+        'iecodanalisis',
+        'updated_at',
     ];
 
-    // Definir relaciones, si es necesario
+    //Cast formatea los datos 
+    protected $casts = [
+        'fecha' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'anulado' => 'boolean',
+        'iecuenta' => 'integer',
+        'iecodanalisis' => 'integer',
+    ];
+
+//TODO ver esto
+    // Relación con el usuario que emite
+    // public function emisorUser()
+    // {
+    //     return $this->belongsTo(User::class, 'emite_id');
+    // }
 }
