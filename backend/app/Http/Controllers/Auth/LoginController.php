@@ -33,23 +33,17 @@ class LoginController extends Controller
         Log::info('[LOGIN] Datos recibidos:', ['email' => $email]);
 
         $client = new Client();
-        $url = env('APP_URL') . '/oauth/token';
 
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            return response()->json([
-                'message' => 'La URL no es válida',
-                'url' => $url
-            ], 400);
-        }
 
-        Log::info('[LOGIN] URL de solicitud:', ['url' => $url]);
-
+        $url = config('app.url') . '/oauth/token';
+        Log::info('url: '.$url);
+        
         $formParams = [
             'grant_type' => 'password',
-            'client_id' => env('PASSPORT_CLIENT_ID'),
-            'client_secret' => env('PASSPORT_CLIENT_SECRET'),
-            'username' => $email,
-            'password' => $password,
+            'client_id' => config('services.passport.client_id'),
+            'client_secret' => config('services.passport.client_secret'),
+            'username' => $request->input('email'),
+            'password' => $request->input('password'),
             'scope' => '',
         ];
 
