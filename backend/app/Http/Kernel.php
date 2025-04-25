@@ -38,7 +38,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-        \Barryvdh\Cors\HandleCors::class, // Aquí se agrega el middleware
+        \Fruitcake\Cors\HandleCors::class, // Aquí se agrega el middleware
         'throttle:60,1',
         'bindings',
     ],
