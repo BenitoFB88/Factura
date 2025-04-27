@@ -18,7 +18,6 @@ use App\Http\Controllers\InvoiceManagerController;
 Route::post('/login', 'Auth\LoginController@login');
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
 //ruta no protegida para probar listar factura:
-Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
 //editar facturas
 Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
 
@@ -45,8 +44,9 @@ Route::middleware(['auth:api'])->group(function () {
     
     // Crear una nueva factura
     Route::post('invoices', [InvoiceManagerController::class, 'store']);
+    Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
+    Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
 
-     Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 //
 });
 
