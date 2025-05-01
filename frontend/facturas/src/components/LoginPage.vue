@@ -1,6 +1,5 @@
 <template>
   <div class="login-page">
-    <header class="banner">Gestor Facturas iHosting</header>
 
     <main class="main-content">
       <div class="login-box">
@@ -39,7 +38,7 @@
       </div>
     </main>
 
-    <footer class="footer">© 2025 iHosting</footer>
+  
 
     <div v-if="mostrarPopup" class="popup">¡Inicio de sesión exitoso!</div>
   </div>
@@ -111,7 +110,6 @@ export default {
 .login-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   background: linear-gradient(135deg, #dbeeff, #f1f9ff);
   font-family: 'Segoe UI', sans-serif;
 }
@@ -124,18 +122,13 @@ export default {
   font-size: 1.5rem;
 }
 
-.footer {
-  background-color: #00bcd4;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 1rem;
-}
+
 
 .main-content {
-  flex: 1;
   display: flex;
   justify-content: center;
+  padding-top: 2%;
+  padding-bottom: 2%;
   align-items: center;
 }
 

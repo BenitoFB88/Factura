@@ -1,24 +1,36 @@
 <template>
-  <div class="container">
-    <h2 class="title">Buscar Facturas</h2>
+  <div class="container py-4">
+    <h2 class="text-center mb-4">Buscar Facturas</h2>
     <!-- FORMULARIO -->
     <div class="form-container">
-      <form @submit.prevent="buscarFacturas" class="formulario">
-        <div class="form-group">
-          <label for="fecha">Fecha:</label>
-          <input id="fecha" type="date" v-model="searchParams.fecha" />
+      <form @submit.prevent="buscarFacturas" class="bg-white p-4 rounded shadow-sm">
+        <div class="row g-3">
+        <div class="col-md-4">
+          <label for="fecha_inicio" class="form-label">Fecha Inicio:</label>
+          <input id="fecha_inicio" type="date" v-model="searchParams.fecha_inicio" class="form-control" />
         </div>
-        <div class="form-group">
-          <label for="numero">Número de Factura:</label>
-          <input id="numero" type="text" v-model="searchParams.numero_factura" />
+        <div class="col-md-4">
+          <label for="fecha_fin" class="form-label">Fecha Fin:</label>
+          <input id="fecha_fin" type="date" v-model="searchParams.fecha_fin" class="form-control" />
         </div>
-        <div class="form-group">
-          <label for="cliente">Cliente:</label>
-          <input id="cliente" type="text" v-model="searchParams.cliente" />
+        <div class="col-md-4">
+          <label for="numero_factura" class="form-label">Número de Factura:</label>
+          <input id="numero_factura" type="text" v-model="searchParams.numero_factura" class="form-control" />
         </div>
-        <button type="submit">Buscar</button>
+        <div class="col-md-6">
+          <label for="cliente" class="form-label">Cliente:</label>
+          <input id="cliente" type="text" v-model="searchParams.cliente" class="form-control" />
+        </div>
+        <div class="col-md-6">
+          <label for="codigo_analisis" class="form-label">Código de Análisis:</label>
+          <input id="codigo_analisis" type="text" v-model="searchParams.codigo_analisis" class="form-control" />
+        </div>
+      </div>
+      <div class="mt-4 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </div>
       </form>
-    </div>
+  </div>
 
     <!-- Indicador de carga -->
     <div v-if="loading" class="loading-overlay">
@@ -29,8 +41,10 @@
     <transition name="fade-modal">
       <div v-if="mostrarResultados" class="modal-overlay" @click="cerrarModal">
         <div class="modal-content" @click.stop>
-          <button class="modal-close-btn" @click="cerrarModal" style="width: auto; padding: auto; background-color: red;">X</button>
+          <button class="modal-close-btn" @click="cerrarModal">X</button>
           <h3>Resultados de Búsqueda</h3>
+
+          <button @click="exportarResultados" class="exportar-btn">Exportar Resultados</button>
 
           <table v-if="paginatedInvoices.length">
             <thead>
@@ -39,36 +53,27 @@
                 <th>Emisor</th>
                 <th>Receptor</th>
                 <th>Folio</th>
-                <th>Monto</th>
+                <th>Total</th>
+                <th>Código Análisis</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(factura, index) in paginatedInvoices" :key="index">
-                <td :title="formatDate(factura.fecha) || 'Fecha no disponible'">
-                  {{ formatDate(factura.fecha) || 'Fecha no disponible' }}
+                <td>{{ formatDate(factura.fecha) }}</td>
+                <td>{{ factura.emisor }}</td>
+                <td>{{ factura.receptor }}</td>
+                <td>{{ factura.folio }}</td>
+                <td>{{ factura.total }}</td>
+                <td>{{ factura.codigo_analisis }}</td>
+                <td>
+                  <button @click="seleccionarFactura(index)">Editar</button>
                 </td>
-                <td :title="factura.emisor || 'Emisor no disponible'">
-                  {{ factura.emisor || 'Emisor no disponible' }}
-                </td>
-                <td :title="factura.receptor || 'Receptor no disponible'">
-                  {{ factura.receptor || 'Receptor no disponible' }}
-                </td>
-                <td :title="factura.folio || 'Folio no disponible'">
-                  {{ factura.folio || 'Folio no disponible' }}
-                </td>
-                <td :title="factura.total || 'Total no disponible'">
-                  {{ factura.total || 'Total no disponible' }}
-                </td>
-                
-                <td><button @click="seleccionarFactura(index)">Editar</button></td>
               </tr>
             </tbody>
           </table>
-
           <p v-else>No se encontraron resultados.</p>
 
-          <!-- Paginación -->
           <div v-if="totalPages > 1" class="pagination">
             <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">Anterior</button>
             <span>{{ currentPage }} de {{ totalPages }}</span>
@@ -83,55 +88,53 @@
       <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
         <div class="modal-content" @click.stop>
           <h3>Editar Factura</h3>
-
           <div class="form-group">
             <label>Fecha:</label>
             <input type="date" v-model="facturaEditando.fecha" />
           </div>
-
           <div class="form-group">
             <label>Número:</label>
             <input type="text" v-model="facturaEditando.numero" />
           </div>
-
           <div class="form-group">
             <label>Cliente:</label>
             <input type="text" v-model="facturaEditando.cliente" />
           </div>
-
           <div class="form-group">
-            <label>Monto:</label>
-            <input type="text" v-model="facturaEditando.monto" />
+            <label>Total:</label>
+            <input type="text" v-model="facturaEditando.total" />
           </div>
-
+          <div class="form-group">
+            <label>Código de Análisis:</label>
+            <input type="text" v-model="facturaEditando.codigo_analisis" />
+          </div>
           <div class="modal-buttons">
             <button @click="guardarCambios">Guardar</button>
-            <button @click="cancelarEdicion">Cancelar</button>
+            <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
           </div>
         </div>
       </div>
     </transition>
-
   </div>
 </template>
 
 <script>
 import axios from 'axios';
-
 export default {
   name: 'BuscarFacturas',
   data() {
     return {
       searchParams: {
-        fecha: '',
+        fecha_inicio: '',
+        fecha_fin: '',
+        numero_factura: '',
         cliente: '',
-        numero_factura: ''
+        codigo_analisis: ''
       },
       allInvoices: [],
       paginatedInvoices: [],
       errorMessage: '',
       loading: false,
-      errors: {},
       currentPage: 1,
       resultsPerPage: 10,
       totalResults: 0,
@@ -145,99 +148,87 @@ export default {
     }
   },
   methods: {
-    // Función para formatear la fecha sin la hora
     formatDate(date) {
       if (!date) return '';
-      const parsedDate = new Date(date);
-      return parsedDate.toLocaleDateString('es-CL'); // Usa el formato de fecha para Chile
+      return new Date(date).toLocaleDateString('es-CL');
     },
-
     seleccionarFactura(index) {
       this.facturaEditando = { ...this.paginatedInvoices[index], index };
     },
-
     guardarCambios() {
       const i = this.facturaEditando.index;
       this.paginatedInvoices[i] = { ...this.facturaEditando };
       this.facturaEditando = null;
     },
-
     cancelarEdicion() {
       this.facturaEditando = null;
     },
-
     async buscarFacturas() {
       this.errorMessage = '';
-      if (!this.validateForm()) return;
-
       try {
         this.loading = true;
         const authData = JSON.parse(localStorage.getItem('auth'));
         const token = authData?.access_token;
-
         if (!token) {
           this.errorMessage = 'Token de autenticación no encontrado.';
-          this.loading = false;
           return;
         }
-
         const params = { ...this.searchParams };
         const response = await axios.get('http://localhost/api/invoices/search', {
           params,
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
-
         if (Array.isArray(response.data)) {
           this.allInvoices = response.data;
           this.totalResults = this.allInvoices.length;
           this.currentPage = 1;
           this.paginateInvoices();
         } else {
-          this.errorMessage = 'Formato de respuesta inesperado de la API.';
+          this.errorMessage = 'Formato inesperado de respuesta.';
         }
       } catch (error) {
-        console.error('Error al realizar la búsqueda:', error);
-        this.errorMessage = 'Error al realizar la búsqueda. Intenta nuevamente.';
+        console.error('Error buscando facturas', error);
       } finally {
         this.loading = false;
       }
     },
-
     paginateInvoices() {
       const start = (this.currentPage - 1) * this.resultsPerPage;
       const end = start + this.resultsPerPage;
       this.paginatedInvoices = this.allInvoices.slice(start, end);
       this.mostrarResultados = true;
     },
-
     goToPage(pageNumber) {
       if (pageNumber < 1 || pageNumber > this.totalPages) return;
       this.currentPage = pageNumber;
       this.paginateInvoices();
     },
-
-    validateForm() {
-      this.errors = {};
-      const { fecha, cliente, numero_factura } = this.searchParams;
-
-      if (!fecha && !cliente && !numero_factura) {
-        this.errorMessage = 'Debe ingresar al menos un parámetro de búsqueda.';
-        return false;
-      }
-
-      this.errorMessage = '';
-      return true;
-    },
-
     cerrarModal() {
       this.mostrarResultados = false;
       this.facturaEditando = null;
+    },
+    exportarResultados() {
+      if (!this.paginatedInvoices.length) {
+        alert('No hay resultados para exportar.');
+        return;
+      }
+      const headers = ['Fecha', 'Emisor', 'Receptor', 'Folio', 'Total', 'Codigo Analisis'];
+      const rows = this.paginatedInvoices.map(f => [f.fecha, f.emisor, f.receptor, f.folio, f.total, f.codigo_analisis]);
+      const csvContent = [headers, ...rows].map(e => e.map(field => `"${field}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'facturas_exportadas.csv');
+      link.click();
     }
   }
 };
 </script>
+
+<style scoped>
+/* Todos tus estilos anteriores se mantienen (omito aquí para no hacerte demasiado largo esto) */
+</style>
+
 
 <style scoped>
 /* Contenedor principal para centrar todo el contenido */
