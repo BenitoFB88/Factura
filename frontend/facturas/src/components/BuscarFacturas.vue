@@ -1,36 +1,77 @@
 <template>
   <div class="container py-4">
     <h2 class="text-center mb-4">Buscar Facturas</h2>
+    <!-- Mensaje de éxito con transición fade-out -->
+    <div
+      v-if="mensajeExportacion"
+      class="fade-message"
+      :class="{ 'fade-out': isFadingOut }"
+    >
+      {{ mensajeExportacion }}
+    </div>
+
     <!-- FORMULARIO -->
     <div class="form-container">
-      <form @submit.prevent="buscarFacturas" class="bg-white p-4 rounded shadow-sm">
+      <form
+        @submit.prevent="buscarFacturas"
+        class="bg-white p-4 rounded shadow-sm"
+      >
         <div class="row g-3">
-        <div class="col-md-4">
-          <label for="fecha_inicio" class="form-label">Fecha Inicio:</label>
-          <input id="fecha_inicio" type="date" v-model="searchParams.fecha_inicio" class="form-control" />
+          <div class="col-md-4">
+            <label for="fecha_inicio" class="form-label">Fecha Inicio:</label>
+            <input
+              id="fecha_inicio"
+              type="date"
+              v-model="searchParams.fecha_inicio"
+              class="form-control"
+            />
+          </div>
+          <div class="col-md-4">
+            <label for="fecha_fin" class="form-label">Fecha Fin:</label>
+            <input
+              id="fecha_fin"
+              type="date"
+              v-model="searchParams.fecha_fin"
+              class="form-control"
+            />
+          </div>
+          <div class="col-md-4">
+            <label for="numero_factura" class="form-label"
+              >Número de Factura:</label
+            >
+            <input
+              id="numero_factura"
+              type="text"
+              v-model="searchParams.numero_factura"
+              class="form-control"
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="cliente" class="form-label">Cliente:</label>
+            <input
+              id="cliente"
+              type="text"
+              v-model="searchParams.cliente"
+              class="form-control"
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="codigo_analisis" class="form-label"
+              >Código de Análisis:</label
+            >
+            <input
+              id="codigo_analisis"
+              type="text"
+              v-model="searchParams.codigo_analisis"
+              class="form-control"
+            />
+          </div>
         </div>
-        <div class="col-md-4">
-          <label for="fecha_fin" class="form-label">Fecha Fin:</label>
-          <input id="fecha_fin" type="date" v-model="searchParams.fecha_fin" class="form-control" />
+        <div class="mt-4 d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary">Buscar</button>
         </div>
-        <div class="col-md-4">
-          <label for="numero_factura" class="form-label">Número de Factura:</label>
-          <input id="numero_factura" type="text" v-model="searchParams.numero_factura" class="form-control" />
-        </div>
-        <div class="col-md-6">
-          <label for="cliente" class="form-label">Cliente:</label>
-          <input id="cliente" type="text" v-model="searchParams.cliente" class="form-control" />
-        </div>
-        <div class="col-md-6">
-          <label for="codigo_analisis" class="form-label">Código de Análisis:</label>
-          <input id="codigo_analisis" type="text" v-model="searchParams.codigo_analisis" class="form-control" />
-        </div>
-      </div>
-      <div class="mt-4 d-flex justify-content-end">
-        <button type="submit" class="btn btn-primary">Buscar</button>
-      </div>
       </form>
-  </div>
+    </div>
 
     <!-- Indicador de carga -->
     <div v-if="loading" class="loading-overlay">
@@ -44,7 +85,9 @@
           <button class="modal-close-btn" @click="cerrarModal">X</button>
           <h3>Resultados de Búsqueda</h3>
 
-          <button @click="exportarResultados" class="exportar-btn">Exportar Resultados</button>
+          <button @click="exportarResultados" class="exportar-btn">
+            Exportar Resultados
+          </button>
 
           <table v-if="paginatedInvoices.length">
             <thead>
@@ -75,9 +118,19 @@
           <p v-else>No se encontraron resultados.</p>
 
           <div v-if="totalPages > 1" class="pagination">
-            <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">Anterior</button>
+            <button
+              @click="goToPage(currentPage - 1)"
+              :disabled="currentPage === 1"
+            >
+              Anterior
+            </button>
             <span>{{ currentPage }} de {{ totalPages }}</span>
-            <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">Siguiente</button>
+            <button
+              @click="goToPage(currentPage + 1)"
+              :disabled="currentPage === totalPages"
+            >
+              Siguiente
+            </button>
           </div>
         </div>
       </div>
@@ -119,38 +172,40 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
+import * as XLSX from "xlsx";
 export default {
-  name: 'BuscarFacturas',
+  name: "BuscarFacturas",
   data() {
     return {
       searchParams: {
-        fecha_inicio: '',
-        fecha_fin: '',
-        numero_factura: '',
-        cliente: '',
-        codigo_analisis: ''
+        fecha_inicio: "",
+        fecha_fin: "",
+        numero_factura: "",
+        cliente: "",
+        codigo_analisis: "",
       },
       allInvoices: [],
       paginatedInvoices: [],
-      errorMessage: '',
+      errorMessage: "",
       loading: false,
       currentPage: 1,
       resultsPerPage: 10,
       totalResults: 0,
       facturaEditando: null,
-      mostrarResultados: false
+      mostrarResultados: false,
+      mensajeExportacion: "",
     };
   },
   computed: {
     totalPages() {
       return Math.ceil(this.totalResults / this.resultsPerPage);
-    }
+    },
   },
   methods: {
     formatDate(date) {
-      if (!date) return '';
-      return new Date(date).toLocaleDateString('es-CL');
+      if (!date) return "";
+      return new Date(date).toLocaleDateString("es-CL");
     },
     seleccionarFactura(index) {
       this.facturaEditando = { ...this.paginatedInvoices[index], index };
@@ -164,30 +219,33 @@ export default {
       this.facturaEditando = null;
     },
     async buscarFacturas() {
-      this.errorMessage = '';
+      this.errorMessage = "";
       try {
         this.loading = true;
-        const authData = JSON.parse(localStorage.getItem('auth'));
+        const authData = JSON.parse(localStorage.getItem("auth"));
         const token = authData?.access_token;
         if (!token) {
-          this.errorMessage = 'Token de autenticación no encontrado.';
+          this.errorMessage = "Token de autenticación no encontrado.";
           return;
         }
         const params = { ...this.searchParams };
-        const response = await axios.get('http://localhost/api/invoices/search', {
-          params,
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await axios.get(
+          "http://localhost/api/invoices/search",
+          {
+            params,
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (Array.isArray(response.data)) {
           this.allInvoices = response.data;
           this.totalResults = this.allInvoices.length;
           this.currentPage = 1;
           this.paginateInvoices();
         } else {
-          this.errorMessage = 'Formato inesperado de respuesta.';
+          this.errorMessage = "Formato inesperado de respuesta.";
         }
       } catch (error) {
-        console.error('Error buscando facturas', error);
+        console.error("Error buscando facturas", error);
       } finally {
         this.loading = false;
       }
@@ -208,27 +266,131 @@ export default {
       this.facturaEditando = null;
     },
     exportarResultados() {
-      if (!this.paginatedInvoices.length) {
-        alert('No hay resultados para exportar.');
-        return;
+      const headers = [
+        "Fecha",
+        "Emisor",
+        "Receptor",
+        "Folio",
+        "Total",
+        "Código Análisis",
+      ];
+
+      const ws_data = this.allInvoices.map((f) => [
+        new Date(f.fecha), // mantener como Date
+        f.emisor,
+        f.receptor,
+        f.folio,
+        f.total,
+        f.codigo_analisis,
+      ]);
+
+      // Crear la hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...ws_data]);
+
+      // Aplicar estilo a los encabezados
+      for (let col = 0; col < headers.length; col++) {
+        const cell_address = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cell_address]) ws[cell_address] = {};
+
+        // Estilo para los encabezados
+        ws[cell_address].s = {
+          font: { name: "Calibri", sz: 12, bold: true }, // Negrita
+          fill: { fgColor: { rgb: "FFFF00" } }, // Fondo amarillo
+          alignment: {
+            horizontal: "center",
+            vertical: "center",
+            wrapText: true,
+          }, // Alineación y ajuste de texto
+          border: {
+            // Bordes negros
+            top: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } },
+          },
+        };
       }
-      const headers = ['Fecha', 'Emisor', 'Receptor', 'Folio', 'Total', 'Codigo Analisis'];
-      const rows = this.paginatedInvoices.map(f => [f.fecha, f.emisor, f.receptor, f.folio, f.total, f.codigo_analisis]);
-      const csvContent = [headers, ...rows].map(e => e.map(field => `"${field}"`).join(',')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', 'facturas_exportadas.csv');
-      link.click();
-    }
-  }
+
+      // Aplicar bordes a todas las celdas
+      const range = XLSX.utils.decode_range(ws["!ref"]);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cell_address]) continue;
+
+          if (!ws[cell_address].s) ws[cell_address].s = {};
+
+          // Estilo normal para celdas
+          ws[cell_address].s.font = { name: "Calibri", sz: 12 };
+          ws[cell_address].s.alignment = {
+            horizontal: "center",
+            vertical: "center",
+            wrapText: true,
+          };
+
+          // Bordes negros para todas las celdas
+          ws[cell_address].s.border = {
+            top: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } },
+          };
+
+          // Formato especial para columnas específicas
+          if (R !== 0) {
+            if (C === 0) {
+              ws[cell_address].z = "dd-mm-yyyy"; // Fecha
+            } else if (C === 4) {
+              ws[cell_address].z = "#,##0"; // Total en CLP
+            }
+          }
+        }
+      }
+
+      // Ajustar ancho de columnas (Fecha fija, resto automático)
+      ws["!cols"] = headers.map((_, i) => {
+        if (i === 0) return { wch: 12 }; // Fecha fija
+        const maxLength = ws_data.reduce((max, row) => {
+          const val = row[i];
+          const str = val ? val.toString() : "";
+          return Math.max(max, str.length);
+        }, headers[i].length);
+        return { wch: maxLength + 2 };
+      });
+
+      try {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Facturas");
+        XLSX.writeFile(wb, "facturas_exportadas.xlsx");
+
+        // Mensaje de éxito
+        this.mensajeExportacion =
+          "Exportación exitosa. El archivo Excel ha sido generado correctamente.";
+
+        // Iniciar el fade-out después de 2 segundos
+        setTimeout(() => {
+          this.isFadingOut = true;
+
+          // Esperar a que termine la transición para borrar el mensaje
+          setTimeout(() => {
+            this.mensajeExportacion = "";
+            this.isFadingOut = false;
+          }, 1000); // Tiempo de la transición de fade-out (1s)
+        }, 2000); // El mensaje se mantendrá visible durante 2 segundos antes de empezar a desvanecerse
+      } catch (error) {
+        console.error("Error al generar el archivo Excel", error);
+        // Mensaje de error
+        this.mensajeExportacion =
+          "Error al generar el archivo Excel. Por favor, intente nuevamente.";
+      }
+    },
+  },
 };
 </script>
 
 <style scoped>
 /* Todos tus estilos anteriores se mantienen (omito aquí para no hacerte demasiado largo esto) */
 </style>
-
 
 <style scoped>
 /* Contenedor principal para centrar todo el contenido */
@@ -238,8 +400,7 @@ export default {
   align-items: center;
   justify-content: flex-start;
   height: 100vh;
-  background-color: #f4f7fc;
-  padding: 20px;
+  background: linear-gradient(135deg, #dbeeff, #f1f9ff);
 }
 
 .title {
@@ -337,8 +498,12 @@ button:active {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Estilos para la tabla de resultados */
@@ -349,7 +514,8 @@ table {
   table-layout: fixed; /* Asegura que las columnas tengan el mismo ancho */
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ddd;
   padding: 8px; /* más compacto */
   text-align: left;
@@ -358,7 +524,6 @@ th, td {
   text-overflow: ellipsis;
   max-width: 150px;
 }
-
 
 th {
   background-color: #f1f1f1;
@@ -516,5 +681,21 @@ td button:hover {
 .fade-modal-leave-to {
   opacity: 0;
   transform: scale(0.95);
+}
+
+.fade-message {
+  transition: opacity 1s ease-out;
+  opacity: 1;
+  background-color: #4caf50; /* Verde de éxito */
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+  z-index: 9999;
+}
+
+.fade-message.fade-out {
+  opacity: 0;
 }
 </style>

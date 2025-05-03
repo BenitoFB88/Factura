@@ -1,6 +1,5 @@
 <template>
   <div class="login-page">
-
     <main class="main-content">
       <div class="login-box">
         <h2>Iniciar Sesión</h2>
@@ -27,9 +26,11 @@
 
           <div class="buttons">
             <button type="submit" :disabled="cargando">
-              {{ cargando ? 'Ingresando...' : 'Iniciar' }}
+              {{ cargando ? "Ingresando..." : "Iniciar" }}
             </button>
-            <button type="button" class="cancelar" @click="cancelar">Cancelar</button>
+            <button type="button" class="cancelar" @click="cancelar">
+              Cancelar
+            </button>
           </div>
 
           <div v-if="cargando" class="spinner"></div>
@@ -38,71 +39,72 @@
       </div>
     </main>
 
-  
-
     <div v-if="mostrarPopup" class="popup">¡Inicio de sesión exitoso!</div>
   </div>
 </template>
 
 <script>
-import axios from '../axios';
+import axios from "../axios";
 
 export default {
-  name: 'LoginPage',
+  name: "LoginPage",
   data() {
     return {
-      email: '',
-      password: '',
-      mensaje: '',
+      email: "",
+      password: "",
+      mensaje: "",
       cargando: false,
       mostrarPopup: false,
     };
   },
   mounted() {
-    axios.get('/api/hola')
-      .then(response => {
+    axios
+      .get("/api/hola")
+      .then((response) => {
         this.mensaje = response.data.mensaje;
       })
-      .catch(error => {
-        console.error('Error al obtener el mensaje:', error);
+      .catch((error) => {
+        console.error("Error al obtener el mensaje:", error);
       });
   },
   methods: {
     async login() {
       this.cargando = true;
-      this.mensaje = '';
+      this.mensaje = "";
 
       try {
-        const response = await axios.post('/api/login', {
+        const response = await axios.post("/api/login", {
           email: this.email,
           password: this.password,
         });
 
-        localStorage.setItem('auth', JSON.stringify({
-          access_token: response.data.access_token,
-          refresh_token: response.data.refresh_token,
-          token_type: response.data.token_type,
-          expires_in: response.data.expires_in
-        }));
+        localStorage.setItem(
+          "auth",
+          JSON.stringify({
+            access_token: response.data.access_token,
+            refresh_token: response.data.refresh_token,
+            token_type: response.data.token_type,
+            expires_in: response.data.expires_in,
+          })
+        );
 
         this.mostrarPopup = true;
 
         setTimeout(() => {
-          this.$router.push('/dashboard');
+          this.$router.push("/dashboard");
         }, 1000);
-
       } catch (error) {
-        this.mensaje = 'Credenciales incorrectas o error al iniciar sesión.';
+        this.mensaje = "Credenciales incorrectas o error al iniciar sesión.";
         console.error(error);
       } finally {
         this.cargando = false;
       }
     },
     cancelar() {
-      this.email = '';
-      this.password = '';
-    }
-  }
+      this.email = "";
+      this.password = "";
+    },
+  },
 };
 </script>
 
@@ -111,24 +113,14 @@ export default {
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #dbeeff, #f1f9ff);
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
+  min-height: 80vh; /* Asegura altura total de la pantalla */
 }
-
-.banner {
-  background-color: #00bcd4;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 1.5rem;
-}
-
-
 
 .main-content {
+  flex: 1;
   display: flex;
   justify-content: center;
-  padding-top: 2%;
-  padding-bottom: 2%;
   align-items: center;
 }
 
@@ -213,8 +205,12 @@ button:disabled {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .respuesta {
@@ -238,9 +234,21 @@ button:disabled {
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, -60%); }
-  10% { opacity: 1; transform: translate(-50%, -50%); }
-  90% { opacity: 1; transform: translate(-50%, -50%); }
-  100% { opacity: 0; transform: translate(-50%, -40%); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
 }
 </style>
