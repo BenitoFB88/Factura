@@ -1,54 +1,36 @@
 <template>
-  <div class="container">
-    <h2 class="title">Buscar Facturas</h2>
-
+  <div class="container py-4">
+    <h2 class="text-center mb-4">Buscar Facturas</h2>
     <!-- FORMULARIO -->
     <div class="form-container">
-      <form @submit.prevent="buscarFacturas" class="formulario">
-        <div class="form-group">
-          <label for="fecha_inicio">Fecha de inicio:</label>
-          <input
-            id="fecha_inicio"
-            type="date"
-            v-model="searchParams.fecha_inicio"
-            v-tooltip="'Seleccione la fecha de inicio'"
-          />
+      <form @submit.prevent="buscarFacturas" class="bg-white p-4 rounded shadow-sm">
+        <div class="row g-3">
+        <div class="col-md-4">
+          <label for="fecha_inicio" class="form-label">Fecha Inicio:</label>
+          <input id="fecha_inicio" type="date" v-model="searchParams.fecha_inicio" class="form-control" />
         </div>
-        <div class="form-group">
-          <label for="fecha_fin">Fecha de fin:</label>
-          <input
-            id="fecha_fin"
-            type="date"
-            v-model="searchParams.fecha_fin"
-            v-tooltip="'Seleccione la fecha de fin'"
-          />
+        <div class="col-md-4">
+          <label for="fecha_fin" class="form-label">Fecha Fin:</label>
+          <input id="fecha_fin" type="date" v-model="searchParams.fecha_fin" class="form-control" />
         </div>
-        <div class="form-group">
-          <label for="numero">Número de Factura:</label>
-          <input
-            id="numero"
-            type="text"
-            v-model="searchParams.numero_factura"
-            v-tooltip="'Ingrese el número de factura'"
-          />
+        <div class="col-md-4">
+          <label for="numero_factura" class="form-label">Número de Factura:</label>
+          <input id="numero_factura" type="text" v-model="searchParams.numero_factura" class="form-control" />
         </div>
-        <div class="form-group">
-          <label for="cliente">Cliente:</label>
-          <input
-            id="cliente"
-            type="text"
-            v-model="searchParams.cliente"
-            v-tooltip="'Ingrese el nombre del cliente'"
-          />
+        <div class="col-md-6">
+          <label for="cliente" class="form-label">Cliente:</label>
+          <input id="cliente" type="text" v-model="searchParams.cliente" class="form-control" />
         </div>
-        <button type="submit" v-tooltip="'Haz clic para buscar las facturas'">
-          Buscar
-        </button>
-        <div v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
+        <div class="col-md-6">
+          <label for="codigo_analisis" class="form-label">Código de Análisis:</label>
+          <input id="codigo_analisis" type="text" v-model="searchParams.codigo_analisis" class="form-control" />
         </div>
+      </div>
+      <div class="mt-4 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </div>
       </form>
-    </div>
+  </div>
 
     <!-- Indicador de carga -->
     <div v-if="loading" class="loading-overlay">
@@ -59,14 +41,10 @@
     <transition name="fade-modal">
       <div v-if="mostrarResultados" class="modal-overlay" @click="cerrarModal">
         <div class="modal-content" @click.stop>
-          <button
-            class="modal-close-btn"
-            @click="cerrarModal"
-            v-tooltip="'Cerrar ventana de resultados'"
-          >
-            X
-          </button>
+          <button class="modal-close-btn" @click="cerrarModal">X</button>
           <h3>Resultados de Búsqueda</h3>
+
+          <button @click="exportarResultados" class="exportar-btn">Exportar Resultados</button>
 
           <table v-if="paginatedInvoices.length">
             <thead>
@@ -75,58 +53,31 @@
                 <th>Emisor</th>
                 <th>Receptor</th>
                 <th>Folio</th>
-                <th>Monto</th>
+                <th>Total</th>
+                <th>Código Análisis</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(factura, index) in paginatedInvoices" :key="index">
-                <td :title="formatDate(factura.fecha) || 'Fecha no disponible'">
-                  {{ formatDate(factura.fecha) || "Fecha no disponible" }}
-                </td>
-                <td :title="factura.emisor || 'Emisor no disponible'">
-                  {{ factura.emisor || "Emisor no disponible" }}
-                </td>
-                <td :title="factura.receptor || 'Receptor no disponible'">
-                  {{ factura.receptor || "Receptor no disponible" }}
-                </td>
-                <td :title="factura.folio || 'Folio no disponible'">
-                  {{ factura.folio || "Folio no disponible" }}
-                </td>
-                <td :title="factura.total || 'Total no disponible'">
-                  {{ factura.total || "Total no disponible" }}
-                </td>
+                <td>{{ formatDate(factura.fecha) }}</td>
+                <td>{{ factura.emisor }}</td>
+                <td>{{ factura.receptor }}</td>
+                <td>{{ factura.folio }}</td>
+                <td>{{ factura.total }}</td>
+                <td>{{ factura.codigo_analisis }}</td>
                 <td>
-                  <button
-                    @click="seleccionarFactura(index)"
-                    v-tooltip="'Editar factura'"
-                  >
-                    Editar
-                  </button>
+                  <button @click="seleccionarFactura(index)">Editar</button>
                 </td>
               </tr>
             </tbody>
           </table>
-
           <p v-else>No se encontraron resultados.</p>
 
-          <!-- Paginación -->
           <div v-if="totalPages > 1" class="pagination">
-            <button
-              @click="goToPage(currentPage - 1)"
-              :disabled="currentPage === 1"
-              v-tooltip="'Ir a la página anterior'"
-            >
-              Anterior
-            </button>
+            <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">Anterior</button>
             <span>{{ currentPage }} de {{ totalPages }}</span>
-            <button
-              @click="goToPage(currentPage + 1)"
-              :disabled="currentPage === totalPages"
-              v-tooltip="'Ir a la siguiente página'"
-            >
-              Siguiente
-            </button>
+            <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">Siguiente</button>
           </div>
         </div>
       </div>
@@ -137,53 +88,29 @@
       <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
         <div class="modal-content" @click.stop>
           <h3>Editar Factura</h3>
-
           <div class="form-group">
             <label>Fecha:</label>
-            <input
-              type="date"
-              v-model="facturaEditando.fecha"
-              v-tooltip="'Seleccione la nueva fecha'"
-            />
+            <input type="date" v-model="facturaEditando.fecha" />
           </div>
-
           <div class="form-group">
             <label>Número:</label>
-            <input
-              type="text"
-              v-model="facturaEditando.numero"
-              v-tooltip="'Ingrese el nuevo número de factura'"
-            />
+            <input type="text" v-model="facturaEditando.numero" />
           </div>
-
           <div class="form-group">
             <label>Cliente:</label>
-            <input
-              type="text"
-              v-model="facturaEditando.cliente"
-              v-tooltip="'Ingrese el nombre del cliente'"
-            />
+            <input type="text" v-model="facturaEditando.cliente" />
           </div>
-
           <div class="form-group">
-            <label>Monto:</label>
-            <input
-              type="text"
-              v-model="facturaEditando.monto"
-              v-tooltip="'Ingrese el monto de la factura'"
-            />
+            <label>Total:</label>
+            <input type="text" v-model="facturaEditando.total" />
           </div>
-
+          <div class="form-group">
+            <label>Código de Análisis:</label>
+            <input type="text" v-model="facturaEditando.codigo_analisis" />
+          </div>
           <div class="modal-buttons">
-            <button
-              @click="guardarCambios"
-              v-tooltip="'Guardar los cambios realizados'"
-            >
-              Guardar
-            </button>
-            <button @click="cancelarEdicion" v-tooltip="'Cancelar la edición'">
-              Cancelar
-            </button>
+            <button @click="guardarCambios">Guardar</button>
+            <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
           </div>
         </div>
       </div>
@@ -192,175 +119,116 @@
 </template>
 
 <script>
-import axios from "axios";
-import VTooltip from "v-tooltip"; // Asegúrate de que lo hayas importado
-
+import axios from 'axios';
 export default {
-  name: "BuscarFacturas",
+  name: 'BuscarFacturas',
   data() {
     return {
       searchParams: {
-        fecha_inicio: "",
-        fecha_fin: "",
-        cliente: "",
-        numero_factura: "",
+        fecha_inicio: '',
+        fecha_fin: '',
+        numero_factura: '',
+        cliente: '',
+        codigo_analisis: ''
       },
       allInvoices: [],
       paginatedInvoices: [],
-      errorMessage: "",
+      errorMessage: '',
       loading: false,
-      errors: {},
       currentPage: 1,
       resultsPerPage: 10,
       totalResults: 0,
       facturaEditando: null,
-      mostrarResultados: false,
+      mostrarResultados: false
     };
   },
   computed: {
     totalPages() {
       return Math.ceil(this.totalResults / this.resultsPerPage);
-    },
+    }
   },
   methods: {
     formatDate(date) {
-      if (!date) return "";
-      const parsedDate = new Date(date);
-      return parsedDate.toLocaleDateString("es-CL");
+      if (!date) return '';
+      return new Date(date).toLocaleDateString('es-CL');
     },
-
     seleccionarFactura(index) {
       this.facturaEditando = { ...this.paginatedInvoices[index], index };
     },
-
     guardarCambios() {
       const i = this.facturaEditando.index;
       this.paginatedInvoices[i] = { ...this.facturaEditando };
       this.facturaEditando = null;
     },
-
     cancelarEdicion() {
       this.facturaEditando = null;
     },
-
     async buscarFacturas() {
-      this.errorMessage = "";
-      if (!this.validateForm()) return;
-
+      this.errorMessage = '';
       try {
         this.loading = true;
-
-        const authData = JSON.parse(localStorage.getItem("auth"));
+        const authData = JSON.parse(localStorage.getItem('auth'));
         const token = authData?.access_token;
-
         if (!token) {
-          this.setErrorMessage("Token de autenticación no encontrado.");
-          this.loading = false;
+          this.errorMessage = 'Token de autenticación no encontrado.';
           return;
         }
-
         const params = { ...this.searchParams };
-
-        const response = await axios.get("http://localhost/api/buscar-dte", {
+        const response = await axios.get('http://localhost/api/invoices/search', {
           params,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` }
         });
-
         if (Array.isArray(response.data)) {
           this.allInvoices = response.data;
           this.totalResults = this.allInvoices.length;
           this.currentPage = 1;
           this.paginateInvoices();
         } else {
-          this.setErrorMessage("Formato de respuesta inesperado de la API.");
+          this.errorMessage = 'Formato inesperado de respuesta.';
         }
       } catch (error) {
-        console.error("Error al realizar la búsqueda:", error);
-        this.setErrorMessage(
-          "Error al realizar la búsqueda. Intenta nuevamente."
-        );
+        console.error('Error buscando facturas', error);
       } finally {
         this.loading = false;
       }
     },
-
-    setErrorMessage(message) {
-      if (this.errorMessage !== message) {
-        this.errorMessage = message;
-        clearTimeout(this.errorTimeout);
-
-        this.$nextTick(() => {
-          const errorElement = document.querySelector(".error-message");
-          if (errorElement) {
-            errorElement.classList.remove("fade-out");
-            void errorElement.offsetWidth;
-            errorElement.classList.add("fade-out");
-          }
-        });
-
-        this.errorTimeout = setTimeout(() => {
-          this.errorMessage = "";
-        }, 5000);
-      }
-    },
-
     paginateInvoices() {
       const start = (this.currentPage - 1) * this.resultsPerPage;
       const end = start + this.resultsPerPage;
       this.paginatedInvoices = this.allInvoices.slice(start, end);
       this.mostrarResultados = true;
     },
-
     goToPage(pageNumber) {
       if (pageNumber < 1 || pageNumber > this.totalPages) return;
       this.currentPage = pageNumber;
       this.paginateInvoices();
     },
-
-    validateForm() {
-      this.errors = {};
-      const { fecha_inicio, fecha_fin, cliente, numero_factura } =
-        this.searchParams;
-
-      if (!fecha_inicio && !fecha_fin && !cliente && !numero_factura) {
-        this.errorMessage = "Debe ingresar al menos un parámetro de búsqueda.";
-        return false;
-      }
-
-      if (
-        fecha_inicio &&
-        fecha_fin &&
-        new Date(fecha_inicio) > new Date(fecha_fin)
-      ) {
-        this.errorMessage =
-          "La fecha de inicio no puede ser mayor que la fecha de fin.";
-        return false;
-      }
-
-      const fechaFin = new Date(fecha_fin);
-      const fechaActual = new Date();
-      if (fecha_fin && fechaFin > fechaActual) {
-        this.errorMessage =
-          "La fecha de fin no puede ser mayor que la fecha actual.";
-        return false;
-      }
-
-      this.errorMessage = "";
-      return true;
-    },
-
     cerrarModal() {
       this.mostrarResultados = false;
       this.facturaEditando = null;
     },
-  },
-  directives: {
-    tooltip: VTooltip,
-  },
+    exportarResultados() {
+      if (!this.paginatedInvoices.length) {
+        alert('No hay resultados para exportar.');
+        return;
+      }
+      const headers = ['Fecha', 'Emisor', 'Receptor', 'Folio', 'Total', 'Codigo Analisis'];
+      const rows = this.paginatedInvoices.map(f => [f.fecha, f.emisor, f.receptor, f.folio, f.total, f.codigo_analisis]);
+      const csvContent = [headers, ...rows].map(e => e.map(field => `"${field}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'facturas_exportadas.csv');
+      link.click();
+    }
+  }
 };
 </script>
+
+<style scoped>
+/* Todos tus estilos anteriores se mantienen (omito aquí para no hacerte demasiado largo esto) */
+</style>
+
 
 <style scoped>
 /* Contenedor principal para centrar todo el contenido */
@@ -469,12 +337,8 @@ button:active {
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Estilos para la tabla de resultados */
@@ -485,8 +349,7 @@ table {
   table-layout: fixed; /* Asegura que las columnas tengan el mismo ancho */
 }
 
-th,
-td {
+th, td {
   border: 1px solid #ddd;
   padding: 8px; /* más compacto */
   text-align: left;
@@ -495,6 +358,7 @@ td {
   text-overflow: ellipsis;
   max-width: 150px;
 }
+
 
 th {
   background-color: #f1f1f1;
@@ -515,17 +379,22 @@ td button:hover {
   background-color: #005ba1;
 }
 
+/* Paginación */
 .pagination {
   display: flex;
   justify-content: center;
+  gap: 10px;
   margin-top: 20px;
 }
 
 .pagination button {
-  padding: 8px 16px;
+  padding: 8px 12px;
   font-size: 14px;
-  margin: 0 5px;
-  border-radius: 4px;
+  background-color: #0070c9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .pagination button:disabled {
@@ -533,30 +402,61 @@ td button:hover {
   cursor: not-allowed;
 }
 
+.pagination span {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+/* Estilos de los modales */
+.modal-buttons button {
+  padding: 8px 16px;
+  background-color: #0070c9;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 4px;
+  width: auto;
+  height: auto;
+}
+
+.modal-buttons button:hover {
+  background-color: #005ba1;
+}
+
+.modal-buttons button:active {
+  background-color: #003d7a;
+}
+
+/* Eliminar el foco en el modal al hacer clic fuera de él */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 1000;
 }
 
 .modal-content {
-  background-color: white;
+  position: relative; /* Importante para posicionar la X en la esquina */
+  background: white;
   padding: 20px;
-  border-radius: 8px;
-  width: 80%;
-  max-width: 600px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
 }
 
-.modal-buttons button {
-  margin-right: 10px;
-  padding: 10px 15px;
+.modal-content button {
+  padding: 8px 16px;
+  font-size: 10px; /* Cambia el tamaño de la fuente */
   background-color: #0070c9;
   color: white;
   border: none;
@@ -564,42 +464,57 @@ td button:hover {
   cursor: pointer;
 }
 
-.modal-buttons button:hover {
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  background: none;
+  border: none;
+  color: #0070c9;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.modal-close-btn:hover {
+  color: #005ba1;
+}
+
+.modal-close-btn:active {
+  color: #003d7a;
+}
+
+.modal-content button:hover {
   background-color: #005ba1;
 }
 
-.modal-close-btn {
-  background-color: red;
-  color: white;
-  font-size: 20px;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
+.modal-content button:active {
+  background-color: #003d7a;
 }
 
-.error-message {
-  background-color: #ff4d4d; /* Rojo para indicar error */
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 10px;
-  text-align: center;
-  font-size: 16px;
-  opacity: 1; /* Asegurarnos de que el mensaje sea visible */
-  transition: opacity 0.5s ease; /* Hacer la animación más fluida */
+.fade-modal-enter-active,
+.fade-modal-leave-active {
+  transition: all 0.3s ease;
 }
 
-/* Animación para desvanecer el mensaje después de 5 segundos */
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+.fade-modal-enter-from {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
-.error-message.fade-out {
-  animation: fadeOut 5s forwards; /* Se aplica la animación solo si tiene la clase 'fade-out' */
+.fade-modal-enter-to {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fade-modal-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fade-modal-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 </style>
