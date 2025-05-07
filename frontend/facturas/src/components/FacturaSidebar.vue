@@ -32,7 +32,7 @@ export default {
 
 .sidebar {
   width: 200px;
-  background-color: #1e3a5f;
+  background-color: #1b5c88;
   color: white;
   padding: 20px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);

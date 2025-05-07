@@ -26,6 +26,8 @@ Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
 Route::get('/hola', function () {
     return response()->json(['mensaje' => '¡Bienvenido a iHosting!']);
 });
+Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
+
 
 
 //rutas protegeidas
@@ -46,7 +48,7 @@ Route::middleware(['auth:api'])->group(function () {
     // Crear una nueva factura
     Route::post('invoices', [InvoiceManagerController::class, 'store']);
 
-     Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
+    //  Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 //
 });
 
