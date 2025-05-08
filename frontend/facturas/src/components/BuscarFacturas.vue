@@ -48,12 +48,7 @@
         <div class="modal-content" @click.stop>
           <button class="modal-close-btn" @click="cerrarModal">X</button>
           <h3>Resultados de Búsqueda</h3>
-
-          <button @click="exportarResultados" class="exportar-btn">
-            Exportar Resultados
-          </button>
-
-          <table v-if="paginatedInvoices.length">
+          <table v-if="paginatedInvoices.length" class="table table-striped table-bordered text-small">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -79,7 +74,6 @@
                   </button>
                 </td>
               </tr>
-
             </tbody>
           </table>
           <p v-else>No se encontraron resultados.</p>
@@ -91,6 +85,9 @@
             <span>{{ currentPage }} de {{ totalPages }}</span>
             <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">
               Siguiente
+            </button>
+            <button @click="exportarResultados" class="exportar-btn">
+              Exportar Resultados
             </button>
           </div>
         </div>
@@ -191,7 +188,7 @@
           }
           const params = { ...this.searchParams };
           const response = await axios.get(
-            "http://localhost/api/invoices/search",
+            "http://localhost/api/buscar-dte",
             {
               params,
               headers: { Authorization: `Bearer ${token}` },
@@ -561,6 +558,14 @@
   .modal-buttons button:active {
     background-color: #003d7a;
   }
+  .table>:not(caption)>*>* {
+    padding: .2rem .2rem;
+    text-align: center;
+    color: var(--bs-table-color-state, var(--bs-table-color-type, var(--bs-table-color)));
+    background-color: var(--bs-table-bg);
+    border-bottom-width: var(--bs-border-width);
+    box-shadow: inset 0 0 0 9999px var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));
+}
 
   /* Eliminar el foco en el modal al hacer clic fuera de él */
   .modal-overlay {
@@ -583,7 +588,7 @@
     padding: 20px;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
+    /* max-width: 500px; */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     font-size: 14px;
   }
@@ -610,6 +615,7 @@
     color: #0070c9;
     cursor: pointer;
     transition: color 0.3s ease;
+    width: auto;
   }
 
   .modal-close-btn:hover {
@@ -668,5 +674,17 @@
 
   .fade-message.fade-out {
     opacity: 0;
+  }
+
+  .exportar-btn {
+    background-color: #28a745 !important;
+    /* Verde */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 14px;
+    margin-left: 90px;
   }
 </style>
