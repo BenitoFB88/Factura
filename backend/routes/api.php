@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\InvoiceManagerController;
+use App\External\Icontador;
+use App\Http\Controllers\Api\IcontadorController;
 
 
 /*
@@ -16,8 +18,12 @@ use App\Http\Controllers\InvoiceManagerController;
 
 // Ruta pública para login
 Route::post('/login', 'Auth\LoginController@login');
+
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
-//ruta no protegida para probar listar factura:
+//TODO no protegidas sacar de acá
+//probar login icontador:
+Route::post('/icontadortoken', 'Api\IcontadorController@login');
+// probar listar factura 
 Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
 //editar facturas
 Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
