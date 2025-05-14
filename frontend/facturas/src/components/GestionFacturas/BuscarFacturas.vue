@@ -19,12 +19,12 @@
             <input id="fecha_fin" type="date" v-model="searchParams.fecha_fin" class="form-control" />
           </div>
           <div class="col-md-4">
-            <label for="numero_factura" class="form-label">Número de Factura:</label>
-            <input id="numero_factura" type="text" v-model="searchParams.numero_factura" class="form-control" />
+            <label for="folio" class="form-label">Número de Factura:</label>
+            <input id="folio" type="text" v-model="searchParams.folio" class="form-control" />
           </div>
           <div class="col-md-6">
-            <label for="cliente" class="form-label">Cliente:</label>
-            <input id="cliente" type="text" v-model="searchParams.cliente" class="form-control" />
+            <label for="emisor" class="form-label">Cliente:</label>
+            <input id="emisor" type="text" v-model="searchParams.emisor" class="form-control" />
           </div>
           <div class="col-md-6">
             <label for="codigo_analisis" class="form-label">Código de Análisis:</label>
@@ -100,22 +100,6 @@
         <div class="modal-content" @click.stop>
           <h3>Editar Factura</h3>
           <div class="form-group">
-            <label>Fecha:</label>
-            <input type="date" v-model="facturaEditando.fecha" />
-          </div>
-          <div class="form-group">
-            <label>Número:</label>
-            <input type="text" v-model="facturaEditando.numero" />
-          </div>
-          <div class="form-group">
-            <label>Cliente:</label>
-            <input type="text" v-model="facturaEditando.cliente" />
-          </div>
-          <div class="form-group">
-            <label>Total:</label>
-            <input type="text" v-model="facturaEditando.total" />
-          </div>
-          <div class="form-group">
             <label>Código de Análisis:</label>
             <input type="text" v-model="facturaEditando.codigo_analisis" />
           </div>
@@ -131,16 +115,16 @@
 
 <script>
   import axios from "axios";
-  import * as XLSX from "xlsx";
-  export default {
+  import ExcelJS from "exceljs";
+  import { saveAs } from "file-saver"; export default {
     name: "BuscarFacturas",
     data() {
       return {
         searchParams: {
           fecha_inicio: "",
           fecha_fin: "",
-          numero_factura: "",
-          cliente: "",
+          folio: "",
+          emisor: "",
           codigo_analisis: "",
         },
         allInvoices: [],
@@ -153,6 +137,7 @@
         facturaEditando: null,
         mostrarResultados: false,
         mensajeExportacion: "",
+        iva: 0.19
       };
     },
     computed: {
@@ -187,6 +172,7 @@
             return;
           }
           const params = { ...this.searchParams };
+          console.log(params);
           const response = await axios.get(
             "http://localhost/api/buscar-dte",
             {
@@ -225,134 +211,121 @@
       },
       exportarResultados() {
         const headers = [
-          "Fecha",
-          "Emisor",
-          "Receptor",
-          "Folio",
+          "Fecha Docto",//Fecha Emision
+          "Tipo Docto",//33 Factura
+          "Nro Docto",//Folio
+          "Rut",//Receptor
+          "Nombre",//Receptor
+          "CTA Neto",//Total sin IVA
+          "CA Neto",
+          "Monto Neto",
+          "CTA Exento",
+          "CA Exento",
+          "CC Exento",
+          "COD SII Otro",
+          "CTA Otro",
+          "CC Otro",
+          "Monto Otro",
+          "% IVA",//19
+          "IVA",//Monto de IVA
           "Total",
-          "Código Análisis",
+          "Glosa"
         ];
 
-        const ws_data = this.allInvoices.map((f) => [
-          this.formatDate(f.fecha), // convertir a string legible
-          f.emisor,
-          f.receptor,
-          f.folio,
-          f.total,
-          f.codigo_analisis,
-        ]);
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Facturas");
 
-        this.allInvoices.forEach(element => {
-          console.log("Fechas: " + element.fecha); // Convertir a objeto Date
-        });
-
-        // Crear la hoja de trabajo
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...ws_data]);
-
-        // Aplicar estilo a los encabezados
-        for (let col = 0; col < headers.length; col++) {
-          const cell_address = XLSX.utils.encode_cell({ r: 0, c: col });
-          if (!ws[cell_address]) ws[cell_address] = {};
-
-          // Estilo para los encabezados
-          ws[cell_address].s = {
-            font: { name: "Calibri", sz: 12, bold: true }, // Negrita
-            fill: { fgColor: { rgb: "FFFF00" } }, // Fondo amarillo
-            alignment: {
-              horizontal: "center",
-              vertical: "center",
-              wrapText: true,
-            }, // Alineación y ajuste de texto
-            border: {
-              // Bordes negros
-              top: { style: "thin", color: { rgb: "000000" } },
-              left: { style: "thin", color: { rgb: "000000" } },
-              bottom: { style: "thin", color: { rgb: "000000" } },
-              right: { style: "thin", color: { rgb: "000000" } },
-            },
+        // Agregar encabezados con estilo
+        const headerRow = sheet.addRow(headers);
+        headerRow.eachCell((cell) => {
+          cell.font = { name: "Calibri", size: 12, bold: true };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "7caff1" },
           };
-        }
-
-        // Aplicar bordes a todas las celdas
-        const range = XLSX.utils.decode_range(ws["!ref"]);
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-          for (let C = range.s.c; C <= range.e.c; ++C) {
-            const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
-            if (!ws[cell_address]) continue;
-
-            if (!ws[cell_address].s) ws[cell_address].s = {};
-
-            // Estilo normal para celdas
-            ws[cell_address].s.font = { name: "Calibri", sz: 12 };
-            ws[cell_address].s.alignment = {
-              horizontal: "center",
-              vertical: "center",
-              wrapText: true,
-            };
-
-            // Bordes negros para todas las celdas
-            ws[cell_address].s.border = {
-              top: { style: "thin", color: { rgb: "000000" } },
-              left: { style: "thin", color: { rgb: "000000" } },
-              bottom: { style: "thin", color: { rgb: "000000" } },
-              right: { style: "thin", color: { rgb: "000000" } },
-            };
-
-            // Formato especial para columnas específicas
-            if (R !== 0) {
-              if (C === 0) {
-                ws[cell_address].z = "dd-mm-yyyy"; // Fecha
-              } else if (C === 4) {
-                ws[cell_address].z = "#,##0"; // Total en CLP
-              }
-            }
-          }
-        }
-
-        // Ajustar ancho de columnas (Fecha fija, resto automático)
-        ws["!cols"] = headers.map((_, i) => {
-          if (i === 0) return { wch: 12 }; // Fecha fija
-          const maxLength = ws_data.reduce((max, row) => {
-            const val = row[i];
-            const str = val ? val.toString() : "";
-            return Math.max(max, str.length);
-          }, headers[i].length);
-          return { wch: maxLength + 2 };
+          cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
         });
 
-        try {
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, "Facturas");
-          XLSX.writeFile(wb, "facturas_exportadas.xlsx");
+        // Agregar datos con formato
+        this.allInvoices.forEach((f) => {
+          const row = sheet.addRow([
+            this.formatDate(f.fecha), // Puedes ajustar esto si es string o Date
+            f.tipo_dte,
+            f.folio,
+            f.receptor,
+            f.receptor,
+            f.neto,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            this.iva * 100,
+            (f.neto * this.iva),
+            f.neto * (1 + this.iva),
+            "Sin Glosa"
+          ]);
+          row.eachCell((cell, colNumber) => {
+            cell.font = { name: "Calibri", size: 12 };
+            cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+            cell.border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
 
-          // Mensaje de éxito
-          this.mensajeExportacion =
-            "Exportación exitosa. El archivo Excel ha sido generado correctamente.";
+            // Formato de fecha y moneda
+            if (colNumber === 1) {
+              cell.numFmt = "dd-mm-yyyy"; // Fecha
+            }
+            if (colNumber === 5) {
+              cell.numFmt = "#,##0"; // Total (moneda sin decimales)
+            }
+          });
+        });
 
-          // Iniciar el fade-out después de 2 segundos
+        // Ajustar ancho de columnas automáticamente
+        sheet.columns.forEach((column) => {
+          let maxLength = 10;
+          column.eachCell({ includeEmpty: true }, (cell) => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+          });
+          column.width = maxLength + 2;
+        });
+
+        // Generar y descargar el archivo
+        workbook.xlsx.writeBuffer().then((buffer) => {
+          saveAs(new Blob([buffer]), "facturas_exportadas.xlsx");
+
+          this.mensajeExportacion = "Exportación exitosa. El archivo Excel ha sido generado correctamente.";
           setTimeout(() => {
             this.isFadingOut = true;
-
-            // Esperar a que termine la transición para borrar el mensaje
             setTimeout(() => {
               this.mensajeExportacion = "";
               this.isFadingOut = false;
-            }, 1000); // Tiempo de la transición de fade-out (1s)
-          }, 2000); // El mensaje se mantendrá visible durante 2 segundos antes de empezar a desvanecerse
-        } catch (error) {
+            }, 1000);
+          }, 2000);
+        }).catch((error) => {
           console.error("Error al generar el archivo Excel", error);
-          // Mensaje de error
-          this.mensajeExportacion =
-            "Error al generar el archivo Excel. Por favor, intente nuevamente.";
-        }
-      },
+          this.mensajeExportacion = "Error al generar el archivo Excel. Por favor, intente nuevamente.";
+        });
+      }
     },
   };
 </script>
-
-<style scoped>
-  /* Todos tus estilos anteriores se mantienen (omito aquí para no hacerte demasiado largo esto) */
-</style>
 
 <style scoped>
   /* Contenedor principal para centrar todo el contenido */
@@ -558,6 +531,7 @@
   .modal-buttons button:active {
     background-color: #003d7a;
   }
+
   .table>:not(caption)>*>* {
     padding: .2rem .2rem;
     text-align: center;
@@ -565,7 +539,7 @@
     background-color: var(--bs-table-bg);
     border-bottom-width: var(--bs-border-width);
     box-shadow: inset 0 0 0 9999px var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));
-}
+  }
 
   /* Eliminar el foco en el modal al hacer clic fuera de él */
   .modal-overlay {

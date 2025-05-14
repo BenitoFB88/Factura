@@ -23,12 +23,15 @@ class DteEmitidoController extends Controller
 
         // Buscar por folio
         if ($request->filled('folio')) {
+            Log::info('Folio recibido:', ['folio' => $request->input('folio')]);
             $query->where('folio', $request->input('folio'));
         }
 
-        // Buscar por emisor
+        // Buscar por emisor (coincidencia parcial, insensible a mayúsculas)
         if ($request->filled('emisor')) {
-            $query->where('emisor', $request->input('emisor'));
+            $emisor = strtolower($request->input('emisor'));
+            Log::info('Emisor recibido:', ['emisor' => $emisor]);
+            $query->whereRaw('LOWER(emisor) LIKE ?', ["%{$emisor}%"]);
         }
 
         // Buscar por fecha exacta
