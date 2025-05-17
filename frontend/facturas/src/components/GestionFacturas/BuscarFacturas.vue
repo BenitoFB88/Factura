@@ -274,7 +274,7 @@
             this.iva * 100,
             (f.neto * this.iva),
             f.neto * (1 + this.iva),
-            "Sin Glosa"
+            f.xml
           ]);
           row.eachCell((cell, colNumber) => {
             cell.font = { name: "Calibri", size: 12 };
