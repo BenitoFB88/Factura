@@ -53,6 +53,8 @@ Route::middleware(['auth:api'])->group(function () {
     
     // Crear una nueva factura
     Route::post('invoices', [InvoiceManagerController::class, 'store']);
+    Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
+    Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
 
     //  Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 //

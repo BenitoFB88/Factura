@@ -17,13 +17,19 @@ RUN apt-get update && apt-get install -y \
 # Instalamos Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Instalamos barryvdh/laravel-cors (compatible con Laravel 5.7)
+# Nota: lo hacemos al final para aprovechar el cache de las capas anteriores
+WORKDIR /var/www
+COPY . /var/www
+RUN composer require barryvdh/laravel-cors:^0.11.0
+
 # Copiamos el archivo entrypoint.sh al contenedor
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # Damos permisos de ejecución a entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Definimos el directorio de trabajo
+# Establecemos el directorio de trabajo
 WORKDIR /var/www
 
 # Establecemos el script entrypoint.sh como el punto de entrada al contenedor

@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LoginPage from '../components/LoginPage.vue';
-import ExcelUpload from '../components/ExcelUpload.vue';
-import FacturaDashboard from '@/components/FacturaDashboard.vue';
-
+import LoginPage from '@/components/Login/LoginPage.vue';
+import FacturaDashboard from '@/components/GestionFacturas/FacturaDashboard.vue';
 const routes = [
   {
     path: '/',
@@ -17,11 +15,6 @@ const routes = [
     path: '/dashboard',
     name: 'FacturaDashboard',
     component: FacturaDashboard
-  },
-  {
-    path: '/upload-excel',
-    name: 'ExcelUpload',
-    component: ExcelUpload,
   }
 ];
 

@@ -96,6 +96,13 @@ Laravel vive en la carpeta backend/
 
 Puedes agregar un frontend Vue en frontend/ y conectarlo al backend (http://localhost)
 
+Para ingresar al contenedor de laravel
+docker exec -it laravel_app bash
+
+Para crear usuario de passport dentro del contenedor de docker
+php artisan passport:client --password
+
+
 
 
 

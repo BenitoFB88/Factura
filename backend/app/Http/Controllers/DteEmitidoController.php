@@ -10,36 +10,61 @@ use Illuminate\Support\Facades\Log;
 class DteEmitidoController extends Controller
 {
     public function listarDTE(Request $request)
-    {   //consumo el models
+    {
+        // Iniciar log para depuración
         Log::info('0 Iniciar buscar DTE');
+
         $query = DteEmitido::query();
-        //Si tiene id, va a mostrar el dte del id
-        if ($request->has('id')) {
+
+        // Buscar por ID
+        if ($request->filled('id')) {
             $query->where('id', $request->input('id'));
         }
 
-        if ($request->has('folio')) {//muestra por folio
+        // Buscar por folio
+        if ($request->filled('folio')) {
+            Log::info('Folio recibido:', ['folio' => $request->input('folio')]);
             $query->where('folio', $request->input('folio'));
         }
 
-        if ($request->has('emisor')) {//muestra por emosion
-            $query->where('emisor', $request->input('emisor'));
+        // Buscar por emisor (coincidencia parcial, insensible a mayúsculas)
+        if ($request->filled('emisor')) {
+            $emisor = strtolower($request->input('emisor'));
+            Log::info('Emisor recibido:', ['emisor' => $emisor]);
+            $query->whereRaw('LOWER(emisor) LIKE ?', ["%{$emisor}%"]);
         }
 
-        if ($request->has('fecha')) {//muestra por la fecha
+        // Buscar por fecha exacta
+        if ($request->filled('fecha')) {
             $query->where('fecha', $request->input('fecha'));
         }
 
-        if ($request->has('fecha_inicio') && $request->has('fecha_fin')) {
+        // Buscar por fecha de inicio (mayor o igual)
+        if ($request->filled('fecha_inicio')) {
+            $query->where('fecha', '>=', $request->input('fecha_inicio'));
+        }
+
+        // Buscar por fecha de fin (menor o igual)
+        if ($request->filled('fecha_fin')) {
+            $query->where('fecha', '<=', $request->input('fecha_fin'));
+        }
+
+        // Si se especifican ambas fechas (inicio y fin), se buscan facturas dentro del rango
+        if ($request->filled('fecha_inicio') && $request->filled('fecha_fin')) {
             $query->whereBetween('fecha', [
-                $request->input('fecha_inicio'),//rango de fecha
+                $request->input('fecha_inicio'),
                 $request->input('fecha_fin')
             ]);
         }
 
-        //genera la consulta y la devuelve en json
+        // Ordenar los resultados por fecha descendente
+        $query->orderBy('fecha', 'desc');
+
+        // Ejecutar la consulta y devolver el resultado en formato JSON
         return response()->json($query->get());
     }
+
+
 
     //la función de actualizar, solo actualiza lo que el model permite en fill
     public function actualizarDTEs(Request $request)
@@ -59,8 +84,8 @@ class DteEmitidoController extends Controller
             }
 
             $dte = DteEmitido::where('emisor', $item['emisor'])
-                            ->where('folio', $item['folio'])
-                            ->first();
+                ->where('folio', $item['folio'])
+                ->first();
 
             if ($dte) {
                 $dte->update([
