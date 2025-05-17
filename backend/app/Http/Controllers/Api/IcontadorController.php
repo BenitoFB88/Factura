@@ -28,7 +28,7 @@ class IcontadorController extends Controller
         
         log::info('conexion exitosa '.$hrsExito);
     
-            return response()->json([ 'estatus' => 200,
+            return response()->json([ 'status' => 200,
                                     'mensaje'=>'Actualizacion Exitosa',
                                     'fecha_actualizacion'=> $hrsExito,
                                     'Nuevos codigos '=>$actualizarCodigo]);
