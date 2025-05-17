@@ -22,7 +22,7 @@ Route::post('/login', 'Auth\LoginController@login');
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
 //TODO no protegidas sacar de acá
 //probar login icontador:
-Route::post('/icontadortoken', 'Api\IcontadorController@login');
+Route::post('/actualizarcodigos', 'Api\IcontadorController@actualizarcodigos');
 // probar listar factura 
 Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
 //editar facturas
