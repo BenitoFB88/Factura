@@ -101,8 +101,14 @@
           <h3>Editar Factura</h3>
           <div class="form-group">
             <label>Código de Análisis:</label>
-            <input type="text" v-model="facturaEditando.codigo_analisis" />
+            <select v-model="facturaEditando.codigo_analisis">
+              <option disabled value="">Selecciona un código</option>
+              <option v-for="codigo in codigosNoUsados" :key="codigo.id" :value="codigo.id">
+                {{ codigo.nombre }}
+              </option>
+            </select>
           </div>
+
           <div class="modal-buttons">
             <button @click="guardarCambios">Guardar</button>
             <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
@@ -137,7 +143,8 @@
         facturaEditando: null,
         mostrarResultados: false,
         mensajeExportacion: "",
-        iva: 0.19
+        iva: 0.19,
+        codigosNoUsados: []
       };
     },
     computed: {
@@ -150,9 +157,47 @@
         if (!date) return "";
         return new Date(date).toLocaleDateString("es-CL");
       },
-      seleccionarFactura(index) {
+      async seleccionarFactura(index) {
         this.facturaEditando = { ...this.paginatedInvoices[index], index };
-      },
+
+        try {
+          const auth = JSON.parse(localStorage.getItem('auth'));
+          const token = auth?.access_token;
+
+          if (!token) {
+            console.error('No se encontró el token de acceso.');
+            return;
+          }
+
+          const response = await fetch('http://localhost/api/codigos-no-usados', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            }
+          });
+
+          const data = await response.json();
+
+          if (data.status === 200) {
+            const codigoActual = this.facturaEditando.iecodanalisis;
+
+            const yaIncluido = data.codigos_no_usados.find(c => c.id === codigoActual);
+            if (!yaIncluido && codigoActual) {
+              data.codigos_no_usados.push({
+                id: codigoActual,
+                nombre: `Código actual (${codigoActual})`
+              });
+            }
+
+            this.codigosNoUsados = data.codigos_no_usados;
+          } else {
+            console.error('Error al obtener códigos de análisis no usados:', data);
+          }
+        } catch (error) {
+          console.error('Error al llamar a la API:', error);
+        }
+      }
+      ,
       guardarCambios() {
         const i = this.facturaEditando.index;
         this.paginatedInvoices[i] = { ...this.facturaEditando };

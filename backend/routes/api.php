@@ -22,6 +22,7 @@ Route::post('/login', 'Auth\LoginController@login');
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
 //TODO no protegidas sacar de acá
 //probar login icontador:
+Route::post('/icontadortoken', 'Api\IcontadorController@login');
 Route::post('/actualizarcodigos', 'Api\IcontadorController@actualizarcodigos');
 // probar listar factura 
 Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
@@ -55,6 +56,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('invoices', [InvoiceManagerController::class, 'store']);
     Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
     Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
+    Route::get('/codigos-no-usados', [IcontadorController::class, 'codigosAnalisisNoUsados']);
+
 
     //  Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 //

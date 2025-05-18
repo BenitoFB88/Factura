@@ -291,7 +291,7 @@ class Icontador
     }
 
     public function actualizarCuentas($cuentas){
-        //obtengo las cuentas de bbdd
+        //1. Obtengo las cuentas de bbdd
         $cuentasBBDD = DB::table('iecuentas')->select('id', 'id_iempresario', 'nombre')->get();
 
         // 2. Log del total y algunas muestras
@@ -300,10 +300,10 @@ class Icontador
 
         $cuentasBBDDIndexed = $cuentasBBDD->keyBy('id_iempresario');
 
-            // 2. Convertir a array indexado por id_iempresario
+        // 3. Convertir a array indexado por id_iempresario
         $cuentasBBDDIndexed = $cuentasBBDD->keyBy('id_iempresario');
 
-        // 3. Comparar con lo que vino de la API
+        // 4. Comparar con lo que vino de la API
         foreach ($cuentas as $cuentaAPI) {
             $codigo = $cuentaAPI['codigo_completo'];
             $nombre = $cuentaAPI['nombre'];
