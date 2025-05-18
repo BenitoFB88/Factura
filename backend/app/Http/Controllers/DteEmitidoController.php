@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use App\Models\DteEmitido;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
 
 
 class DteEmitidoController extends Controller
@@ -70,7 +71,7 @@ class DteEmitidoController extends Controller
     public function actualizarDTEs(Request $request)
     {
         $datos = $request->input('datos');
-        //recibe una array para que reciba multiples 
+
         if (!is_array($datos)) {
             return response()->json(['error' => 'Formato de datos inválido'], 400);
         }
@@ -79,7 +80,10 @@ class DteEmitidoController extends Controller
 
         foreach ($datos as $item) {
             if (!isset($item['emisor'], $item['folio'])) {
-                $resultados[] = ['estado' => 'faltan emisor o folio', 'datos' => $item];
+                $resultados[] = [
+                    'estado' => 'faltan emisor o folio',
+                    'datos' => $item
+                ];
                 continue;
             }
 
@@ -87,16 +91,48 @@ class DteEmitidoController extends Controller
                 ->where('folio', $item['folio'])
                 ->first();
 
-            if ($dte) {
-                $dte->update([
-                    'iecuenta' => $item['iecuenta'] ?? $dte->iecuenta,
-                    'iecodanalisis' => $item['iecodanalisis'] ?? $dte->iecodanalisis,
-                    'updated_at' => now(),
-                ]);
-                $resultados[] = ['emisor' => $item['emisor'], 'folio' => $item['folio'], 'estado' => 'actualizado'];
-            } else {
-                $resultados[] = ['emisor' => $item['emisor'], 'folio' => $item['folio'], 'estado' => 'no encontrado'];
+            if (!$dte) {
+                $resultados[] = [
+                    'emisor' => $item['emisor'],
+                    'folio' => $item['folio'],
+                    'estado' => 'no encontrado'
+                ];
+                continue;
             }
+
+            // Inicializo $id_iecuenta con el valor actual del DTE para evitar undefined
+            $id_iecuenta = $dte->iecuenta;
+
+            if (!empty($item['iecodanalisis'])) {
+                $id_iecuenta = DB::table('iecodanalises')
+                    ->where('id', $item['iecodanalisis'])
+                    ->value('id_iecuentas');
+
+                // Si no encuentra el id_iecuenta, podrías decidir cómo manejarlo
+                if (!$id_iecuenta) {
+                    $resultados[] = [
+                        'emisor' => $item['emisor'],
+                        'folio' => $item['folio'],
+                        'estado' => 'iecodanalisis inválido'
+                    ];
+                    continue;
+                }
+            }
+
+            // Actualizamos los campos
+            $dte->update([
+                'iecuenta' => $id_iecuenta,
+                'iecodanalisis' => $item['iecodanalisis'] ?? $dte->iecodanalisis,
+                'updated_at' => now(),
+            ]);
+
+            $resultados[] = [
+                'emisor' => $item['emisor'],
+                'folio' => $item['folio'],
+                'estado' => 'actualizado',
+                'iecodanalisis' => $item['iecodanalisis'] ?? $dte->iecodanalisis,
+                'iecuenta' => $id_iecuenta,
+            ];
         }
 
         return response()->json($resultados);
