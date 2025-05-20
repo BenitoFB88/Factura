@@ -19,8 +19,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.16",
+    "@babel/core": "^7.27.1",
     "@babel/eslint-parser": "^7.12.16",
+    "@babel/preset-env": "^7.27.2",
     "@tailwindcss/postcss": "^4.1.7",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",

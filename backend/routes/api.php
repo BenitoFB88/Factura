@@ -16,6 +16,11 @@ use App\Http\Controllers\Api\IcontadorController;
 | Estas rutas están protegidas con el middleware 'api' por defecto.
 */
 
+Route::options('{any}', function () {
+    return response()->json([], 204);
+})->where('any', '.*');
+
+
 // Ruta pública para login
 Route::post('/login', 'Auth\LoginController@login');
 
