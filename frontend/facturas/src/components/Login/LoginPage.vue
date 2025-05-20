@@ -1,10 +1,11 @@
 <template>
-  <div class="login-page">
-    <main class="main-content">
-      <div class="login-box">
+  <div class="flex flex-col min-h-[80vh] bg-gradient-to-br from-[#dbeeff] via-[#e6f3ff] to-[#f1f9ff] font-sans">
+
+    <main class="flex-1 flex justify-center items-center">
+      <div class="bg-white p-10 rounded-[16px] shadow-lg w-full max-w-[400px] text-center" style="padding: 40px;">
         <h2>Iniciar Sesión</h2>
         <form @submit.prevent="login">
-          <div class="form-group">
+          <div class="mb-5 text-left">
             <label for="usuario">Usuario</label>
             <input
               type="text"
@@ -14,7 +15,7 @@
             />
           </div>
 
-          <div class="form-group">
+          <div class="mb-5 text-left">
             <label for="clave">Clave</label>
             <input
               type="password"
@@ -24,7 +25,7 @@
             />
           </div>
 
-          <div class="buttons">
+          <div class="flex justify-between gap-2.5 mt-2.5">
             <button type="submit" :disabled="cargando">
               {{ cargando ? "Ingresando..." : "Iniciar" }}
             </button>
@@ -109,40 +110,17 @@ export default {
 </script>
 
 <style scoped>
-.login-page {
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #dbeeff, #f1f9ff);
-  font-family: "Segoe UI", sans-serif;
-  min-height: 80vh; /* Asegura altura total de la pantalla */
-}
 
-.main-content {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
-.login-box {
-  background-color: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
+
+
+
 
 h2 {
   color: #1e3a5f;
   margin-bottom: 30px;
 }
 
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
 
 label {
   display: block;
@@ -159,12 +137,6 @@ input {
   border-radius: 8px;
 }
 
-.buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 10px;
-}
 
 button {
   padding: 10px 20px;
