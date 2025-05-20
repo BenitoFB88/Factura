@@ -47,7 +47,11 @@
       <div v-if="mostrarResultados" class="modal-overlay" @click="cerrarModal">
         <div class="modal-content" @click.stop>
           <button class="modal-close-btn" @click="cerrarModal">X</button>
-          <h3>Resultados de Búsqueda</h3>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Resultados de Búsqueda</h3>
+  
+</div>
+
           <table v-if="paginatedInvoices.length" class="table table-striped table-bordered text-small">
             <thead>
               <tr>
@@ -89,27 +93,35 @@
             <button @click="exportarResultados" class="exportar-btn">
               Exportar Resultados
             </button>
+            <button class="btn btn-success" @click="importarCodigoAnalisis">Importar Código de Análisis</button>
           </div>
         </div>
       </div>
     </transition>
 
     <!-- MODAL EDITAR -->
-    <transition name="fade-modal">
-      <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
-        <div class="modal-content" @click.stop>
-          <h3>Editar Factura</h3>
-          <div class="form-group">
-            <label>Código de Análisis:</label>
-            <input type="text" v-model="facturaEditando.codigo_analisis" />
-          </div>
-          <div class="modal-buttons">
-            <button @click="guardarCambios">Guardar</button>
-            <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
-          </div>
-        </div>
+    <!-- MODAL EDITAR -->
+<transition name="fade-modal">
+  <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
+    <div class="modal-content" @click.stop>
+      <h3>Editar Factura</h3>
+      <div class="form-group">
+        <label>Código de Análisis:</label>
+        <select v-model="facturaEditando.codigo_analisis" class="form-control">
+          <option disabled value="">Selecciona un código</option>
+          <option v-for="codigo in codigosAnalisis" :key="codigo" :value="codigo">
+            {{ codigo }}
+          </option>
+        </select>
       </div>
-    </transition>
+      <div class="modal-buttons">
+        <button @click="guardarCambios">Guardar</button>
+        <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
+      </div> 
+    </div>
+  </div>
+</transition>
+
   </div>
 </template>
 
@@ -125,8 +137,14 @@
           fecha_fin: "",
           folio: "",
           emisor: "",
-          codigo_analisis: "",
+          codigosAnalisis: "", 
         },
+        codigosAnalisis: [
+      'CA001', 'CA002', 'CA003', 'CA004', 'CA005',
+      'CA006', 'CA007', 'CA008', 'CA009', 'CA010',
+      'CA011', 'CA012', 'CA013', 'CA014', 'CA015',
+      'CA016', 'CA017', 'CA018', 'CA019', 'CA020',
+    ],
         allInvoices: [],
         paginatedInvoices: [],
         errorMessage: "",
@@ -149,6 +167,12 @@
       formatDate(date) {
         if (!date) return "";
         return new Date(date).toLocaleDateString("es-CL");
+      },
+      importarCodigoAnalisis() {
+        this.allInvoices.forEach((factura) => {
+          factura.codigo_analisis = this.searchParams.codigo_analisis;
+        });
+        this.paginateInvoices();
       },
       seleccionarFactura(index) {
         this.facturaEditando = { ...this.paginatedInvoices[index], index };
@@ -725,4 +749,17 @@
     font-size: 14px;
     margin-left: 90px;
   }
+  .btn-success {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-success:hover {
+  background-color: #218838;
+}
+
 </style>
