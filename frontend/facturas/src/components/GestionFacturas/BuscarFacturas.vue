@@ -86,6 +86,7 @@
             v-if="paginatedInvoices.length"
             class="table table-striped table-bordered text-small"
           >
+
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -142,38 +143,36 @@
             <button @click="guardarCambiosEnBD" class="guardar-btn">
               Guardar Cambios
             </button>
+            <button class="btn btn-success" @click="importarCodigoAnalisis">Importar Código de Análisis</button>
           </div>
         </div>
       </div>
     </transition>
 
     <!-- MODAL EDITAR -->
-    <transition name="fade-modal">
-      <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
-        <div class="modal-content" @click.stop>
-          <h3>Editar Factura</h3>
-          <div class="form-group">
-            <label>Código de Análisis:</label>
-            <select v-model="facturaEditando.codigo_analisis">
-              <option disabled value="">Selecciona un código</option>
-              <option
-                v-for="codigo in codigosNoUsados"
-                :key="codigo.id"
-                :value="codigo.id"
-                class="texto-verde"
-              >
-                {{ codigo.nombre }}
-              </option>
-            </select>
-          </div>
 
-          <div class="modal-buttons">
-            <button @click="guardarCambios">Guardar</button>
-            <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
-          </div>
-        </div>
+    <!-- MODAL EDITAR -->
+<transition name="fade-modal">
+  <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
+    <div class="modal-content" @click.stop>
+      <h3>Editar Factura</h3>
+      <div class="form-group">
+        <label>Código de Análisis:</label>
+        <select v-model="facturaEditando.codigo_analisis" class="form-control">
+          <option disabled value="">Selecciona un código</option>
+          <option v-for="codigo in codigosAnalisis" :key="codigo" :value="codigo">
+            {{ codigo }}
+          </option>
+        </select>
       </div>
-    </transition>
+      <div class="modal-buttons">
+        <button @click="guardarCambios">Guardar</button>
+        <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
+      </div> 
+    </div>
+  </div>
+</transition>
+
   </div>
 </template>
 
@@ -191,6 +190,14 @@ export default {
         folio: "",
         emisor: "",
         codigo_analisis: "",
+  
+        codigosAnalisis: [
+      'CA001', 'CA002', 'CA003', 'CA004', 'CA005',
+      'CA006', 'CA007', 'CA008', 'CA009', 'CA010',
+      'CA011', 'CA012', 'CA013', 'CA014', 'CA015',
+      'CA016', 'CA017', 'CA018', 'CA019', 'CA020',
+    ],
+        
       },
       allInvoices: [],
       paginatedInvoices: [],
@@ -210,38 +217,46 @@ export default {
     totalPages() {
       return Math.ceil(this.totalResults / this.resultsPerPage);
     },
-  },
-  methods: {
-    formatDate(date) {
-      if (!date) return "";
-      return new Date(date).toLocaleDateString("es-CL");
-    },
-    async seleccionarFactura(index) {
-      this.facturaEditando = { ...this.paginatedInvoices[index], index };
-
-      try {
-        const auth = JSON.parse(localStorage.getItem("auth"));
-        const token = auth?.access_token;
-
-        if (!token) {
-          console.error("No se encontró el token de acceso.");
-          return;
-        }
-
-        const response = await fetch("http://localhost/api/codigos-no-usados", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
+    methods: {
+      formatDate(date) {
+        if (!date) return "";
+        return new Date(date).toLocaleDateString("es-CL");
+      },
+      importarCodigoAnalisis() {
+        this.allInvoices.forEach((factura) => {
+          factura.codigo_analisis = this.searchParams.codigo_analisis;
         });
-
-        const data = await response.json();
-
-        if (data.status === 200) {
-          const codigoActual = this.facturaEditando.iecodanalisis;
-
-          const yaIncluido = data.codigos_no_usados.find(
-            (c) => c.id === codigoActual
+        this.paginateInvoices();
+      },
+      seleccionarFactura(index) {
+        this.facturaEditando = { ...this.paginatedInvoices[index], index };
+      },
+      guardarCambios() {
+        const i = this.facturaEditando.index;
+        this.paginatedInvoices[i] = { ...this.facturaEditando };
+        this.facturaEditando = null;
+      },
+      cancelarEdicion() {
+        this.facturaEditando = null;
+      },
+      async buscarFacturas() {
+        this.errorMessage = "";
+        try {
+          this.loading = true;
+          const authData = JSON.parse(localStorage.getItem("auth"));
+          const token = authData?.access_token;
+          if (!token) {
+            this.errorMessage = "Token de autenticación no encontrado.";
+            return;
+          }
+          const params = { ...this.searchParams };
+          console.log(params);
+          const response = await axios.get(
+            "http://localhost/api/buscar-dte",
+            {
+              params,
+              headers: { Authorization: `Bearer ${token}` },
+            }
           );
           if (!yaIncluido && codigoActual) {
             data.codigos_no_usados.push({
@@ -544,7 +559,9 @@ export default {
           setTimeout(() => {
             this.isFadingOut = true;
             setTimeout(() => {
-              this.mensajeExportacion = "";
+              this.mensaque rarahi si la escucho
+              7jeExportacion = "";
+              7jeExportacion = "";
               this.isFadingOut = false;
             }, 1000);
           }, 2000);

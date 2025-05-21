@@ -94,4 +94,16 @@ class IcontadorController extends Controller
         }
     }
 
+    public function login()
+    {
+        $cliente = new Icontador();
+        $token = $cliente->getToken();
+    
+        if($token){
+            return response()->json(['token'=>$token]);
+        }
+            return response()->json(['error'=>'No se pudo obtener el token'],500);
+    }
+    
 }
+
