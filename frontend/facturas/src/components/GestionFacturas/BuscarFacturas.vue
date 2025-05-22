@@ -333,13 +333,14 @@ button:active {
 }
 
 .loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #58aaee;
+  border: 6px solid rgba(0, 188, 212, 0.3);
+  border-top: 6px solid #00bcd4;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
-  z-index: 9999;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto 0;
+  z-index: 99999;
 }
 
 @keyframes spin {
