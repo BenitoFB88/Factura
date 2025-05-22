@@ -13,14 +13,11 @@ class IcontadorController extends Controller
     public function actualizarcodigos()
     {
         try {
-
             $cliente = new Icontador();
             $cuentasBrutas = $cliente->getCuenta();
             $estructuraCuentas = $cuentasBrutas['data_cuenta']['respuesta']['data']['mi_plan_de_cuentas'] ?? [];
 
-
             $cuentas = $cliente->extraerCuentas($estructuraCuentas);
-            //$cuentas = $cliente->extraerCuentas($estructuraCuentas);
             $cliente->actualizarCuentas($cuentas);
 
             $codigosBruto = $cliente->getCod();
@@ -28,22 +25,33 @@ class IcontadorController extends Controller
             $actualizarCodigo = $cliente->actualizararCOD($cuentaYcodigo);
             $hrsExito = $codigosBruto['fecha_epoch'];
 
-            log::info('conexion exitosa ' . $hrsExito);
+            \Log::info('conexion exitosa ' . $hrsExito);
+
+            // Obtener todos los códigos después de actualizar
+            $todosLosCodigos = $this->obtenerTodosCodigosAnalisis();
 
             return response()->json([
                 'status' => 200,
-                'mensaje' => 'Actualizacion Exitosa',
+                'mensaje' => 'Actualización Exitosa',
                 'fecha_actualizacion' => $hrsExito,
-                'Nuevos codigos ' => $actualizarCodigo
+                'nuevos_codigos' => $actualizarCodigo,
+                'codigos_actualizados' => $todosLosCodigos,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'estatus' => 400,
-                'mensaje' => 'Problemas al actualizar codigos de analisis.',
+                'mensaje' => 'Problemas al actualizar códigos de análisis.',
                 'error' => $e->getMessage()
             ]);
         }
     }
+
+    // Función privada para obtener todos los códigos de análisis
+    private function obtenerTodosCodigosAnalisis()
+    {
+        return DB::table('iecodanalises')->get();
+    }
+
 
     public function login()
     {
@@ -58,40 +66,26 @@ class IcontadorController extends Controller
     }
 
 
-    public function codigosAnalisisNoUsados()
+    public function codigosAnalisisTodos()
     {
         try {
-            // Paso 1: IDs de todos los códigos de análisis registrados
-            $todosLosCodigos = DB::table('iecodanalises')->pluck('id')->toArray();
-
-            // Paso 2: IDs de los códigos usados en facturas (distintos y no nulos)
-            $codigosUsados = DB::table('dte_emitidos')
-                ->whereNotNull('iecodanalisis')
-                ->distinct()
-                ->pluck('iecodanalisis')
-                ->toArray();
-
-            // Paso 3: Calcular los códigos que no se usan
-            $codigosNoUsados = array_diff($todosLosCodigos, $codigosUsados);
-
-            // Paso 4: Obtener detalles de esos códigos
-            $detallesNoUsados = DB::table('iecodanalises')
-                ->whereIn('id', $codigosNoUsados)
-                ->get();
+            // Obtener todos los códigos de análisis con detalles
+            $todosLosCodigos = DB::table('iecodanalises')->get();
 
             return response()->json([
                 'status' => 200,
-                'mensaje' => 'Códigos de análisis no utilizados encontrados',
-                'cantidad_no_usados' => count($detallesNoUsados),
-                'codigos_no_usados' => $detallesNoUsados,
+                'mensaje' => 'Todos los códigos de análisis obtenidos',
+                'cantidad' => count($todosLosCodigos),
+                'codigos' => $todosLosCodigos,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 500,
-                'mensaje' => 'Error al obtener los códigos de análisis no utilizados',
+                'mensaje' => 'Error al obtener los códigos de análisis',
                 'error' => $e->getMessage()
             ]);
         }
     }
+
 }
 

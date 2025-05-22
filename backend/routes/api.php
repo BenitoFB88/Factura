@@ -28,12 +28,13 @@ Route::get('/prueba', 'ConsumoBBDDController@prueba');
 //TODO no protegidas sacar de acá
 //probar login icontador:
 
-Route::post('/icontadortoken','Api\IcontadorController@login');
-Route::post('/actualizarcodigos', 'Api\IcontadorController@actualizarcodigos');
+Route::post('/icontadortoken', 'Api\IcontadorController@login');
 // probar listar factura 
 Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
 //editar facturas
 Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
+Route::get('/obtenerCodigos', [IcontadorController::class, 'codigosAnalisisTodos']);
+
 
 
 Route::get('/hola', function () {
@@ -43,26 +44,29 @@ Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
 
 
 
+
 //rutas protegeidas
 Route::middleware(['auth:api'])->group(function () {
-//GRUPO DE RUTAS PROTEGIDAS
+    Route::post('/actualizarcodigos', 'Api\IcontadorController@actualizarcodigos');
+
+    //GRUPO DE RUTAS PROTEGIDAS
 // Ver todas las facturas
     Route::get('invoices', [InvoiceManagerController::class, 'index']);
+
     // Obtener datos del usuario autenticado
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
     // Buscar facturas
     Route::get('invoices/search', [InvoiceManagerController::class, 'search']);
-    
+
     // Ver una factura específica
     Route::get('invoices/{id}', [InvoiceManagerController::class, 'show']);
-    
+
     // Crear una nueva factura
     Route::post('invoices', [InvoiceManagerController::class, 'store']);
     Route::get('/buscar-dte', 'DteEmitidoController@listarDTE');
     Route::post('/actualizar-dtes', 'DteEmitidoController@actualizarDTEs');
-    Route::get('/codigos-no-usados', [IcontadorController::class, 'codigosAnalisisNoUsados']);
 
 
     //  Route::post('/registrar', [RegisterController::class, 'registroUsuario']);
