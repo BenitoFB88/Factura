@@ -22,6 +22,7 @@
     <ModalResultados
       :mostrarResultados="mostrarResultados"
       :paginatedInvoices="paginatedInvoices"
+      :allInvoices="this.allInvoices"
       :currentPage="currentPage"
       :totalPages="totalPages"
       :loading="loading"

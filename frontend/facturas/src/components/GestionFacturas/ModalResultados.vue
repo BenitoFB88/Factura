@@ -62,7 +62,7 @@
 
         <!-- BOTONES UNIFORMES -->
         <div class="modal-buttons">
-          <ExportarFacturas :all-invoices="paginatedInvoices" />
+          <ExportarFacturas :all-invoices="this.allInvoices" />
           <button @click="$emit('guardar-cambios')">Guardar Cambios</button>
           <button @click="actualizarCodigosDesdeApi">
             Importar Código de Análisis
@@ -98,6 +98,7 @@ export default {
     paginatedInvoices: { type: Array, default: () => [] },
     currentPage: { type: Number, default: 1 },
     totalPages: { type: Number, default: 1 },
+    allInvoices: { type: Array, default: () => [] },
   },
   methods: {
     cerrarModal() {
