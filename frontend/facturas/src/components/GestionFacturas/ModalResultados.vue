@@ -1,38 +1,58 @@
 <template>
-  <transition name="fade-modal">
+  <transition
+    enter-active-class="transition transform duration-300"
+    enter-from-class="opacity-0 scale-95"
+    enter-to-class="opacity-100 scale-100"
+    leave-active-class="transition transform duration-300"
+    leave-from-class="opacity-100 scale-100"
+    leave-to-class="opacity-0 scale-95"
+  >
     <div v-if="mostrarResultados" class="modal-overlay" @click="cerrarModal">
       <div class="modal-content" @click.stop>
         <button class="modal-close-btn" @click="cerrarModal">X</button>
-        <h3>Resultados de Búsqueda</h3>
+        <h3 class="text-lg font-semibold mb-4">Resultados de Búsqueda</h3>
         <table
           v-if="paginatedInvoices.length"
-          class="table table-striped table-bordered text-small"
+          class="w-full border-collapse text-sm"
         >
-          <thead>
+          <thead class="bg-gray-200">
             <tr>
-              <th>Fecha</th>
-              <th>Emisor</th>
-              <th>Receptor</th>
-              <th>Folio</th>
-              <th>Total</th>
-              <th>Código Análisis</th>
-              <th>Acciones</th>
+              <th class="border px-2 py-1">Fecha</th>
+              <th class="border px-2 py-1">Emisor</th>
+              <th class="border px-2 py-1">Receptor</th>
+              <th class="border px-2 py-1">Folio</th>
+              <th class="border px-2 py-1">Total</th>
+              <th class="border px-2 py-1">Código Análisis</th>
+              <th class="border px-2 py-1">Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="(factura, index) in paginatedInvoices" :key="index">
+          <tbody class="divide-y divide-gray-200">
+            <tr
+              v-for="(factura, index) in paginatedInvoices"
+              :key="index"
+              class="hover:bg-gray-100"
+            >
               <td :title="formatDate(factura.fecha)">
                 {{ formatDate(factura.fecha) }}
               </td>
-              <td :title="factura.emisor">{{ factura.emisor }}</td>
-              <td :title="factura.receptor">{{ factura.receptor }}</td>
-              <td :title="factura.folio">{{ factura.folio }}</td>
-              <td :title="factura.total">{{ factura.total }}</td>
-              <td :title="factura.iecodanalisis">
+              <td class="border px-2 py-1" :title="factura.emisor">
+                {{ factura.emisor }}
+              </td>
+              <td class="border px-2 py-1" :title="factura.receptor">
+                {{ factura.receptor }}
+              </td>
+              <td class="border px-2 py-1" :title="factura.folio">
+                {{ factura.folio }}
+              </td>
+              <td class="border px-2 py-1" :title="factura.total">
+                {{ factura.total }}
+              </td>
+              <td class="border px-2 py-1" :title="factura.iecodanalisis">
                 {{ factura.iecodanalisis }}
               </td>
               <td>
                 <button
+                  class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition"
                   @click="$emit('editar-factura', index)"
                   :title="'Editar factura ' + factura.folio"
                 >
@@ -42,29 +62,47 @@
             </tr>
           </tbody>
         </table>
-        <p v-else>No se encontraron resultados.</p>
+        <p v-else class="flex justify-center gap-4 mt-4">
+          No se encontraron resultados.
+        </p>
 
-        <div v-if="totalPages > 1" class="pagination">
+        <!-- Paginación -->
+        <div
+          v-if="totalPages > 1"
+          class="pagination flex justify-center gap-4 mt-4"
+        >
           <button
             @click="$emit('cambiar-pagina', currentPage - 1)"
             :disabled="currentPage === 1"
+            class="bg-blue-500 text-white px-3 py-1 rounded "
           >
             Anterior
           </button>
-          <span>{{ currentPage }} de {{ totalPages }}</span>
+          <span class="flex items-center text-base"
+            >{{ currentPage }} de {{ totalPages }}</span
+          >
           <button
             @click="$emit('cambiar-pagina', currentPage + 1)"
             :disabled="currentPage === totalPages"
+            class="text-white px-3 py-1 rounded"
           >
             Siguiente
           </button>
         </div>
 
         <!-- BOTONES UNIFORMES -->
-        <div class="modal-buttons">
-          <ExportarFacturas :all-invoices="this.allInvoices" />
-          <button @click="$emit('guardar-cambios')">Guardar Cambios</button>
-          <button @click="actualizarCodigosDesdeApi">
+        <div class="modal-buttons flex flex-wrap justify-center gap-4 mt-6">
+          <ExportarFacturas :all-invoices="allInvoices" />
+          <button
+            @click="$emit('guardar-cambios')"
+            class="text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          >
+            Guardar Cambios
+          </button>
+          <button
+            @click="actualizarCodigosDesdeApi"
+            class="text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          >
             Importar Código de Análisis
           </button>
         </div>
@@ -140,7 +178,6 @@ export default {
         this.$emit("codigos-actualizados", this.codigos);
 
         console.log("Respuesta de actualización:", response.data);
-
       } catch (error) {
         console.error(
           "❌ Error al actualizar códigos:",
@@ -178,20 +215,6 @@ export default {
   transform: scale(0.95);
 }
 
-/* Fondo oscuro del modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
 /* Contenido modal */
 .modal-content {
   position: relative;
@@ -222,38 +245,20 @@ export default {
   background-color: #d32f2f;
 }
 
-/* Estilos tabla */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  table-layout: fixed;
-}
 th,
 td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
 }
 th {
-  background-color: #f1f1f1;
-  font-weight: bold;
+  background-color: #cecaca;
 }
 td button {
-  padding: 6px 12px;
   background-color: #0070c9;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
   font-size: 14px;
 }
 td button:hover {
-  background-color: #005ba1;
+  background-color: #5347c2;
 }
 
 /* Paginación */
@@ -264,13 +269,11 @@ td button:hover {
   margin-top: 20px;
 }
 .pagination button {
-  padding: 8px 12px;
-  font-size: 14px;
   background-color: #0070c9;
-  color: white;
   border: none;
-  border-radius: 6px;
-  cursor: pointer;
+}
+.pagination button:hover {
+  background-color: #5347c2;
 }
 .pagination button:disabled {
   background-color: #ccc;
@@ -292,26 +295,15 @@ td button:hover {
 }
 .modal-buttons button,
 .modal-buttons :deep(button) {
-  min-width: 180px;
-  padding: 10px 16px;
-  font-size: 14px;
-  border-radius: 6px;
-  background-color: #0070c9;
-  color: white;
-  border: none;
-  cursor: pointer;
-  text-align: center;
+  background-color: #0070c9 ;
 }
 .modal-buttons button:hover,
 .modal-buttons :deep(button:hover) {
-  background-color: #005ba1;
+  background-color: #5347c2 ;
 }
 .modal-buttons button:active,
 .modal-buttons :deep(button:active) {
-  background-color: #003d7a;
-}
-.exportar-resultados {
-  background-color: #07612a;
+  background-color: #5347c2;
 }
 
 /* Cargando */
@@ -328,18 +320,17 @@ td button:hover {
   z-index: 1000;
 }
 .loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #0070c9;
+  border-top: 6px solid #6cc1f1;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
+  width: 120px;
+  height: 120px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto 0;
+  z-index: 99999;
 }
+
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }

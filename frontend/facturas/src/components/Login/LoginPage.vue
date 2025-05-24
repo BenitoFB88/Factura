@@ -1,14 +1,18 @@
 <template>
-  <div class="flex flex-col min-h-[80vh] bg-gradient-to-br from-[#dbeeff] via-[#e6f3ff] to-[#f1f9ff] font-sans">
-
+  <div
+    class="flex flex-col min-h-[80vh] bg-gradient-to-br from-[#dbeeff] via-[#e6f3ff] to-[#f1f9ff] font-sans"
+  >
     <main class="flex-1 flex justify-center items-center">
-      <div class="bg-white p-10 rounded-[16px] shadow-lg w-full max-w-[400px] text-center" style="padding: 40px;">
+      <div
+        class="bg-white p-10 rounded-[16px] shadow-lg w-full max-w-[400px] text-center"
+        style="padding: 40px"
+      >
         <h2>Iniciar Sesión</h2>
         <form @submit.prevent="login">
           <div class="mb-5 text-left">
             <label for="usuario">Usuario</label>
             <input
-              type="text"
+              type="email"
               id="usuario"
               v-model="email"
               placeholder="Ingrese su usuario"
@@ -69,14 +73,25 @@ export default {
       });
   },
   methods: {
+    sanitizeInput(input) {
+      return input.replace(/<[^>]*>?/gm, "");
+    },
     async login() {
+      // Valida que ningún campo esté vacío
+      if (!this.email.trim() || !this.password.trim()) {
+        this.mensaje = "Por favor, complete todos los campos.";
+        return;
+      }
+
       this.cargando = true;
       this.mensaje = "";
+      const sanitizedEmail = this.sanitizeInput(this.email);
+      const sanitizedPassword = this.sanitizeInput(this.password);
 
       try {
         const response = await axios.post("/api/login", {
-          email: this.email,
-          password: this.password,
+          email: sanitizedEmail,
+          password: sanitizedPassword,
         });
 
         localStorage.setItem(
@@ -110,17 +125,10 @@ export default {
 </script>
 
 <style scoped>
-
-
-
-
-
-
 h2 {
   color: #1e3a5f;
   margin-bottom: 30px;
 }
-
 
 label {
   display: block;
@@ -136,7 +144,6 @@ input {
   border: 1px solid #ccc;
   border-radius: 8px;
 }
-
 
 button {
   padding: 10px 20px;
@@ -167,13 +174,13 @@ button:disabled {
 }
 
 .spinner {
-  border: 6px solid rgba(0, 188, 212, 0.3);
-  border-top: 6px solid #00bcd4;
+  border-top: 6px solid #aad5ee;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 120px;
+  height: 120px;
   animation: spin 1s linear infinite;
   margin: 20px auto 0;
+  z-index: 99999;
 }
 
 @keyframes spin {
@@ -223,5 +230,4 @@ button:disabled {
     transform: translate(-50%, -40%);
   }
 }
-
 </style>

@@ -230,6 +230,7 @@ p {
   top: 20px;
   right: 120px;
 }
+
 .fadeOut {
   color: #5ace8e;
   animation: fadeOut 1s forwards;
@@ -237,14 +238,10 @@ p {
 
 .exportar-btn {
   padding: 8px 16px;
-  font-size: 10px;
-  background-color: #5ace8e;
   color: white;
-  border: none;
   border-radius: 4px;
   cursor: pointer;
   height: 60px;
-  max-width: 80px;
 }
 
 @keyframes fadeOut {

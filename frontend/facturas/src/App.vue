@@ -58,7 +58,7 @@
 
     <!-- Pie de página de la aplicación -->
     <footer
-      class="bg-[#41a9ee] text-white text-center p-5 text-base font-sans shadow-inner h-auto"
+      class="bg-[#41a9ee] text-white text-center p-2 text-base font-sans shadow-inner"
     >
       <p>&copy; 2025 iHosting | Proyecto Universitario Duoc UC</p>
     </footer>
@@ -73,7 +73,9 @@ export default {
 
 <style>
 .logo-img {
-  height: 40px;
+  height: 60px;
   width: auto;
+  padding: 5%;
+ 
 }
 </style>
