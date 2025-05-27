@@ -124,7 +124,6 @@ export default {
           f.tipo_dte,
           f.folio,
           rutReceptor,
-
           f.receptor,
           f.neto,
           "",

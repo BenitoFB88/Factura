@@ -222,6 +222,7 @@ export default {
   padding: 20px;
   border-radius: 12px;
   width: 90%;
+  height: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   font-size: 14px;
 }

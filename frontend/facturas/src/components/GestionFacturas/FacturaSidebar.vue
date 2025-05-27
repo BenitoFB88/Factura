@@ -30,8 +30,8 @@ export default {
   min-height: 80vh;
   background:linear-gradient(
     to bottom,
-    #80bae0 0%,
-    #46a5db 100%
+    #e7ebed 0%,
+    #eef2f4 100%
   );
   
 }
