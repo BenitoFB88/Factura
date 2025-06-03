@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\External;
 
@@ -30,12 +30,12 @@ class Icontador
             'password' => env('PASSWORD_USUARIO'),
             'url_sistema' => env('URL_SISTEMA'),
         ];
-        Log::info('body:'. json_encode($body));
+        Log::info('body:' . json_encode($body));
 
-        
+
         try {
 
-            $url = env('URL_ICONTADOR').'login';
+            $url = env('URL_ICONTADOR') . 'login';
 
             $response = $client->post($url, [
                 'headers' => [
@@ -77,7 +77,8 @@ class Icontador
         ];
 
         try {
-            $url = env('URL_ICONTADOR').'mi_contabilidad/codigos_analisis/listado';
+            $url = env('URL_ICONTADOR') . 'mi_contabilidad/codigos_analisis/listado';
+            Log::info('Url utilizada: ' . $url);
 
             $response = $client->post($url, [
                 'headers' => [
@@ -92,7 +93,7 @@ class Icontador
 
             //Log::info('Fecha de conexión (epoch): ' . $timestamp);
             //Log::info('Respuesta de códigos de análisis:', $respuesta);
-            
+
             //Retorno fecha en epoch y la respuesta
             return [
                 'fecha_epoch' => $timestamp,
@@ -106,7 +107,7 @@ class Icontador
                 'mensaje' => $e->getMessage(),
                 'fecha_epoch_error' => Carbon::now()->timestamp,
             ];
-        }    
+        }
     }
 
     public function getCuenta()
@@ -124,7 +125,7 @@ class Icontador
         ];
 
         try {
-            $url = env('URL_ICONTADOR').'mi_contabilidad/plan_cuentas/listado';
+            $url = env('URL_ICONTADOR') . 'mi_contabilidad/plan_cuentas/listado';
 
             $response = $client->post($url, [
                 'headers' => [
@@ -138,8 +139,8 @@ class Icontador
             $timestamp = Carbon::now()->timestamp;
 
             //Log::info('Fecha de conexión (epoch): ' . $timestamp);
-            //Log::info("1.1) Respuesta obtener cuentas:\n" . json_encode($respuesta, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-            
+            Log::info("1.1) Respuesta obtener cuentas:\n" . json_encode($respuesta, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
             //Retorno fecha en epoch y la respuesta
             return [
                 'fecha_epoch' => $timestamp,
@@ -157,8 +158,8 @@ class Icontador
     }
 
     public function extraerCuentas($estructura)
-{//La funcion modifica la función de getcuenta para devolver solo la cuenta y el nombre.
-        
+    {//La funcion modifica la función de getcuenta para devolver solo la cuenta y el nombre.
+
         $resultado = [];
         $cuentasUnicas = [];
 
@@ -192,25 +193,25 @@ class Icontador
             }
         };
 
-    $recorrer($estructura);
+        $recorrer($estructura);
 
-    Log::info('✔ Total cuentas únicas extraídas: ' . count($resultado));
-    return $resultado;
-}
+        Log::info('✔ Total cuentas únicas extraídas: ' . count($resultado));
+        return $resultado;
+    }
 
     public function separadorCuentaCodigo(array $codigos)
     {
-            if (!isset($codigos['data_codigo']['respuesta']['data'])) {
-                Log::warning('La estructura de datos no es válida');
-                return;
+        if (!isset($codigos['data_codigo']['respuesta']['data'])) {
+            Log::warning('La estructura de datos no es válida');
+            return;
+        }
+
+        $resultado = [];
+
+        foreach ($codigos['data_codigo']['respuesta']['data'] as $item) {
+            if (!isset($item['codigo']) || !isset($item['nombre'])) {
+                continue; // salta si falta algo
             }
-
-            $resultado=[];
-
-            foreach ($codigos['data_codigo']['respuesta']['data'] as $item) {
-                if (!isset($item['codigo']) || !isset($item['nombre'])) {
-                    continue; // salta si falta algo
-                }
 
             $codigoCompleto = trim($item['codigo']);
             $nombre = trim($item['nombre']);
@@ -227,13 +228,14 @@ class Icontador
                 'nombre' => $nombre,
                 'codigo_completo' => $codigoCompleto,
             ];
-            
+
         }
         //Log::info('Codigos agrupados por prefijo de 5 dígitos:', $resultado);
         return $resultado;
     }
 
-    public function actualizararCOD($codigos){
+    public function actualizararCOD($codigos)
+    {
         Log::info('===============================================');
         Log::info('Iniciando actualización de códigos de análisis');
 
@@ -250,7 +252,7 @@ class Icontador
             $nombre = $codigo['nombre'];
             $codigo5 = $codigo['codigo_5digitos'];
 
-            if (strpos($codigoCompleto, '-') !== false || strlen($codigoCompleto)>8) {
+            if (strpos($codigoCompleto, '-') !== false || strlen($codigoCompleto) > 8) {
                 continue;
             }
 
@@ -278,7 +280,7 @@ class Icontador
                 'updated_at' => now(),
             ];
         }
-        $cantidadNuevoCOD= count($nuevosCodigos);
+        $cantidadNuevoCOD = count($nuevosCodigos);
         // 5. Insertar todos juntos si hay nuevos
         if (!empty($nuevosCodigos)) {
             DB::table('iecodanalises')->insert($nuevosCodigos);
@@ -290,7 +292,8 @@ class Icontador
         return $cantidadNuevoCOD;
     }
 
-    public function actualizarCuentas($cuentas){
+    public function actualizarCuentas($cuentas)
+    {
         //1. Obtengo las cuentas de bbdd
         $cuentasBBDD = DB::table('iecuentas')->select('id', 'id_iempresario', 'nombre')->get();
 
@@ -326,5 +329,5 @@ class Icontador
         }
     }
 
-   
+
 }

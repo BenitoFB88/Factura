@@ -2,7 +2,7 @@
   <div
     class="flex flex-col min-h-[80vh] bg-gradient-to-br from-[#dbeeff] via-[#e6f3ff] to-[#f1f9ff] font-sans"
   >
-    <main class="flex-1 flex justify-center items-center">
+    <main class="flex-1 flex justify-center items-center mt-4 mb-4">
       <div
         class="bg-white p-10 rounded-[16px] shadow-lg w-full max-w-[400px] text-center"
         style="padding: 40px"

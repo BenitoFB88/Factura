@@ -6,7 +6,7 @@
   >
     <!-- Barra de navegación superior -->
     <nav
-      class="flex justify-between items-center bg-[#41a9ee] text-white px-8 py-4 shadow-md"
+      class="flex justify-between items-center bg-[#41a9ee] text-white px-8 py-1 mr-3 shadow-md"
     >
       <div class="flex items-center font-semibold text-[22px]">
         <!-- Logo de la empresa -->
@@ -58,7 +58,7 @@
 
     <!-- Pie de página de la aplicación -->
     <footer
-      class="bg-[#41a9ee] text-white text-center p-2 text-base font-sans shadow-inner"
+      class="bg-[#41a9ee] text-white text-center p-1 text-base font-sans shadow-inner"
     >
       <p>&copy; 2025 iHosting | Proyecto Universitario Duoc UC</p>
     </footer>
