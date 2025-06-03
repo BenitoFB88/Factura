@@ -3,73 +3,19 @@
     <h2 class="text-center mb-4">Buscar Facturas</h2>
     <!-- Mensaje de éxito con transición fade-out -->
     <div
-      v-if="mensajeExportacion"
+      v-if="mensaje"
       class="fade-message"
       :class="{ 'fade-out': isFadingOut }"
     >
-      {{ mensajeExportacion }}
+      {{ mensaje }}
     </div>
 
     <!-- FORMULARIO -->
-    <div class="form-container">
-      <form
-        @submit.prevent="buscarFacturas"
-        class="bg-white p-4 rounded shadow-sm"
-      >
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label for="fecha_inicio" class="form-label">Fecha Inicio:</label>
-            <input
-              id="fecha_inicio"
-              type="date"
-              v-model="searchParams.fecha_inicio"
-              class="form-control"
-            />
-          </div>
-          <div class="col-md-4">
-            <label for="fecha_fin" class="form-label">Fecha Fin:</label>
-            <input
-              id="fecha_fin"
-              type="date"
-              v-model="searchParams.fecha_fin"
-              class="form-control"
-            />
-          </div>
-          <div class="col-md-4">
-            <label for="folio" class="form-label">Número de Factura:</label>
-            <input
-              id="folio"
-              type="text"
-              v-model="searchParams.folio"
-              class="form-control"
-            />
-          </div>
-          <div class="col-md-6">
-            <label for="emisor" class="form-label">Cliente:</label>
-            <input
-              id="emisor"
-              type="text"
-              v-model="searchParams.emisor"
-              class="form-control"
-            />
-          </div>
-          <div class="col-md-6">
-            <label for="codigo_analisis" class="form-label"
-              >Código de Análisis:</label
-            >
-            <input
-              id="codigo_analisis"
-              type="text"
-              v-model="searchParams.codigo_analisis"
-              class="form-control"
-            />
-          </div>
-        </div>
-        <div class="mt-4 d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary">Buscar</button>
-        </div>
-      </form>
-    </div>
+    <FormularioBusqueda
+      v-model="searchParams"
+      @buscar="buscarFacturas"
+      @limpiar="limpiarCampos"
+    />
 
     <!-- Indicador de carga -->
     <div v-if="loading" class="loading-overlay">
@@ -77,109 +23,53 @@
     </div>
 
     <!-- MODAL RESULTADOS -->
+    <ModalResultados
+      :mostrarResultados="mostrarResultados"
+      :paginatedInvoices="paginatedInvoices"
+      :allInvoices="this.allInvoices"
+      :currentPage="currentPage"
+      :totalPages="totalPages"
+      :loading="loading"
+      @cerrar-modal="mostrarResultados = false"
+      @editar-factura="seleccionarFactura"
+      @cambiar-pagina="goToPage"
+      @guardar-cambios="guardarCambiosEnBD"
+      @codigos-actualizados="actualizarCodigosEnPadre"
+    />
+
+    <!-- MODAL EDITAR -->
     <transition name="fade-modal">
-      <div v-if="mostrarResultados" class="modal-overlay" @click="cerrarModal">
+      <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
         <div class="modal-content" @click.stop>
-          <button class="modal-close-btn" @click="cerrarModal">X</button>
-          <h3>Resultados de Búsqueda</h3>
-          <table
-            v-if="paginatedInvoices.length"
-            class="table table-striped table-bordered text-small"
-          >
-
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Emisor</th>
-                <th>Receptor</th>
-                <th>Folio</th>
-                <th>Total</th>
-                <th>Código Análisis</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(factura, index) in paginatedInvoices" :key="index">
-                <td :title="formatDate(factura.fecha)">
-                  {{ formatDate(factura.fecha) }}
-                </td>
-                <td :title="factura.emisor">{{ factura.emisor }}</td>
-                <td :title="factura.receptor">{{ factura.receptor }}</td>
-                <td :title="factura.folio">{{ factura.folio }}</td>
-                <td :title="factura.total">{{ factura.total }}</td>
-                <td :title="factura.iecodanalisis">
-                  {{ factura.iecodanalisis }}
-                </td>
-                <td>
-                  <button
-                    @click="seleccionarFactura(index)"
-                    :title="'Editar factura ' + factura.folio"
-                  >
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p v-else>No se encontraron resultados.</p>
-
-          <div v-if="totalPages > 1" class="pagination">
-            <button
-              @click="goToPage(currentPage - 1)"
-              :disabled="currentPage === 1"
-            >
-              Anterior
-            </button>
-            <span>{{ currentPage }} de {{ totalPages }}</span>
-            <button
-              @click="goToPage(currentPage + 1)"
-              :disabled="currentPage === totalPages"
-            >
-              Siguiente
-            </button>
-            <button @click="exportarResultados" class="exportar-btn">
-              Exportar Resultados
-            </button>
-            <button @click="guardarCambiosEnBD" class="guardar-btn">
-              Guardar Cambios
-            </button>
-            <button class="btn btn-success" @click="importarCodigoAnalisis">Importar Código de Análisis</button>
+          <h3>Editar Factura</h3>
+          <div class="form-group">
+            <label>Código de Análisis:</label>
+            <select v-model="facturaEditando.iecodanalisis">
+              <option disabled value="">Selecciona un código</option>
+              <option
+                v-for="codigo in codigosAnalisis"
+                :key="codigo.id_iecuentas"
+                :value="codigo.id_iecuentas"
+              >
+                {{ codigo.nombre }} - {{ codigo.id_iecuentas }}
+              </option>
+            </select>
+          </div>
+          <div class="modal-buttons">
+            <button @click="guardarCambios">Guardar</button>
+            <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
           </div>
         </div>
       </div>
     </transition>
-
-    <!-- MODAL EDITAR -->
-
-    <!-- MODAL EDITAR -->
-<transition name="fade-modal">
-  <div v-if="facturaEditando" class="modal-overlay" @click="cerrarModal">
-    <div class="modal-content" @click.stop>
-      <h3>Editar Factura</h3>
-      <div class="form-group">
-        <label>Código de Análisis:</label>
-        <select v-model="facturaEditando.codigo_analisis" class="form-control">
-          <option disabled value="">Selecciona un código</option>
-          <option v-for="codigo in codigosAnalisis" :key="codigo" :value="codigo">
-            {{ codigo }}
-          </option>
-        </select>
-      </div>
-      <div class="modal-buttons">
-        <button @click="guardarCambios">Guardar</button>
-        <button @click="cancelarEdicion" class="cancelar">Cancelar</button>
-      </div> 
-    </div>
-  </div>
-</transition>
-
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import ModalResultados from "./ModalResultados.vue";
+import FormularioBusqueda from "./FormularioBusqueda.vue";
+
 export default {
   name: "BuscarFacturas",
   data() {
@@ -190,15 +80,9 @@ export default {
         folio: "",
         emisor: "",
         codigo_analisis: "",
-  
-        codigosAnalisis: [
-      'CA001', 'CA002', 'CA003', 'CA004', 'CA005',
-      'CA006', 'CA007', 'CA008', 'CA009', 'CA010',
-      'CA011', 'CA012', 'CA013', 'CA014', 'CA015',
-      'CA016', 'CA017', 'CA018', 'CA019', 'CA020',
-    ],
-        
+        isFadingOut: false,
       },
+      codigosAnalisis: [],
       allInvoices: [],
       paginatedInvoices: [],
       errorMessage: "",
@@ -208,141 +92,66 @@ export default {
       totalResults: 0,
       facturaEditando: null,
       mostrarResultados: false,
-      mensajeExportacion: "",
+      mensaje: "",
       iva: 0.19,
-      codigosNoUsados: [],
     };
+  },
+  components: {
+    ModalResultados,
+    FormularioBusqueda,
   },
   computed: {
     totalPages() {
       return Math.ceil(this.totalResults / this.resultsPerPage);
     },
-    methods: {
-      formatDate(date) {
-        if (!date) return "";
-        return new Date(date).toLocaleDateString("es-CL");
-      },
-      importarCodigoAnalisis() {
-        this.allInvoices.forEach((factura) => {
-          factura.codigo_analisis = this.searchParams.codigo_analisis;
-        });
-        this.paginateInvoices();
-      },
-      seleccionarFactura(index) {
-        this.facturaEditando = { ...this.paginatedInvoices[index], index };
-      },
-      guardarCambios() {
-        const i = this.facturaEditando.index;
-        this.paginatedInvoices[i] = { ...this.facturaEditando };
-        this.facturaEditando = null;
-      },
-      cancelarEdicion() {
-        this.facturaEditando = null;
-      },
-      async buscarFacturas() {
-        this.errorMessage = "";
-        try {
-          this.loading = true;
-          const authData = JSON.parse(localStorage.getItem("auth"));
-          const token = authData?.access_token;
-          if (!token) {
-            this.errorMessage = "Token de autenticación no encontrado.";
-            return;
-          }
-          const params = { ...this.searchParams };
-          console.log(params);
-          const response = await axios.get(
-            "http://localhost/api/buscar-dte",
-            {
-              params,
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          if (!yaIncluido && codigoActual) {
-            data.codigos_no_usados.push({
-              id: codigoActual,
-              nombre: `Código actual (${codigoActual})`,
-            });
-          }
-
-          this.codigosNoUsados = data.codigos_no_usados;
-        } else {
-          console.error(
-            "Error al obtener códigos de análisis no usados:",
-            data
-          );
-        }
-      } catch (error) {
-        console.error("Error al llamar a la API:", error);
-      }
+  },
+  methods: {
+    sanitizeInput(input) {
+      return input.replace(/<[^>]*>?/gm, "");
+    },
+    limpiarCampos() {
+      this.searchParams = {
+        fecha_inicio: "",
+        fecha_fin: "",
+        folio: "",
+        emisor: "",
+        codigo_analisis: "",
+      };
+      this.allInvoices = [];
+      this.paginatedInvoices = [];
+      this.currentPage = 1;
+      this.totalResults = 0;
+    },
+    sanitizarDatos() {
+      this.searchParams.folio = this.sanitizeInput(this.searchParams.folio);
+      this.searchParams.emisor = this.sanitizeInput(this.searchParams.emisor);
+      this.searchParams.codigo_analisis = this.sanitizeInput(
+        this.searchParams.codigo_analisis
+      );
+    },
+    editarCodigoAnalisis() {
+      this.allInvoices.forEach((factura) => {
+        factura.codigo_analisis = this.searchParams.codigo_analisis;
+        factura.iecodanalisis = this.searchParams.codigo_analisis;
+      });
+      this.paginateInvoices();
+    },
+    actualizarCodigosEnPadre(nuevosCodigos) {
+      this.codigosAnalisis = nuevosCodigos;
+    },
+    seleccionarFactura(index) {
+      this.facturaEditando = { ...this.paginatedInvoices[index], index };
     },
     guardarCambios() {
       const i = this.facturaEditando.index;
-
-      // Asegúrate que facturaEditando tenga iecuenta e iecodanalisis correctamente modificados
-      this.facturaEditando.iecodanalisis = this.facturaEditando.codigo_analisis;
-
-      this.paginatedInvoices[i] = {
-        ...this.paginatedInvoices[i], // conservar otros campos
-        ...this.facturaEditando, // sobrescribe con los nuevos valores editados
-      };
-
-      console.log(
-        "Factura actualizada en tabla paginada:",
-        this.paginatedInvoices[i]
-      );
-
-      this.facturaEditando = null;
-    },
-    async guardarCambiosEnBD() {
-      try {
-        // Armar el arreglo de objetos con los datos relevantes
-        const datosAGuardar = this.paginatedInvoices.map((factura) => ({
-          emisor: factura.emisor,
-          folio: factura.folio,
-          iecuenta: factura.iecuenta,
-          iecodanalisis: factura.iecodanalisis,
-        }));
-
-        console.log("Datos que se enviarán a la API:", datosAGuardar);
-
-        const token = JSON.parse(localStorage.getItem("auth"))?.access_token;
-
-        if (!token) {
-          console.error("Token no encontrado en localStorage.");
-          alert("Token de autenticación no disponible.");
-          return;
-        }
-
-        const response = await fetch("http://localhost/api/actualizar-dtes", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ datos: datosAGuardar }),
-        });
-
-        const resultado = await response.json();
-
-        console.log("Respuesta cruda de Laravel:", resultado);
-
-        if (response.ok) {
-          console.log("Cambios guardados correctamente:", resultado);
-          alert("Cambios guardados exitosamente.");
-        } else {
-          console.error(
-            "Error al guardar cambios. Código HTTP:",
-            response.status
-          );
-          alert(
-            "Error al guardar cambios. Revisa la consola para más detalles."
-          );
-        }
-      } catch (error) {
-        console.error("Error de red al guardar cambios:", error);
-        alert("Error de red al intentar guardar los cambios.");
+      if (
+        i !== undefined &&
+        this.facturaEditando?.iecodanalisis !== undefined
+      ) {
+        this.paginatedInvoices[i].iecodanalisis =
+          this.facturaEditando.iecodanalisis;
       }
+      this.facturaEditando = null;
     },
     cancelarEdicion() {
       this.facturaEditando = null;
@@ -357,14 +166,20 @@ export default {
           this.errorMessage = "Token de autenticación no encontrado.";
           return;
         }
+
+        this.sanitizarDatos();
         const params = { ...this.searchParams };
-        console.log(params);
         const response = await axios.get("http://localhost/api/buscar-dte", {
           params,
           headers: { Authorization: `Bearer ${token}` },
         });
+
         if (Array.isArray(response.data)) {
-          this.allInvoices = response.data;
+          this.allInvoices = response.data.map((factura) => ({
+            ...factura,
+            iecodanalisis: factura.iecodanalisis || "",
+            codigo_analisis: factura.iecodanalisis || "",
+          }));
           this.totalResults = this.allInvoices.length;
           this.currentPage = 1;
           this.paginateInvoices();
@@ -375,6 +190,50 @@ export default {
         console.error("Error buscando facturas", error);
       } finally {
         this.loading = false;
+      }
+    },
+    async guardarCambiosEnBD() {
+      this.loading = true; // Mostrar spinner
+
+      try {
+        const datosAGuardar = this.paginatedInvoices.map((factura) => ({
+          emisor: factura.emisor,
+          folio: factura.folio,
+          iecuenta: factura.iecuenta,
+          iecodanalisis: factura.iecodanalisis,
+        }));
+
+        const token = JSON.parse(localStorage.getItem("auth"))?.access_token;
+
+        if (!token) {
+          this.loading = false; // Ocultar spinner
+          alert("Token de autenticación no disponible.");
+          return;
+        }
+
+        const response = await fetch("http://localhost/api/actualizar-dtes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ datos: datosAGuardar }),
+        });
+
+        if (response.ok) {
+          this.enviarMensaje(
+            "✅ Cambios guardados exitosamente. Se han reflejado en la base de datos."
+          );
+        } else {
+          this.enviarMensaje("❌ Hubo un problema al guardar los datos.");
+        }
+      } catch (error) {
+        console.error("Error al guardar cambios:", error);
+        this.enviarMensaje(
+          "❌ Error al guardar cambios. Por favor, intenta nuevamente."
+        );
+      } finally {
+        this.loading = false; // Ocultar spinner pase lo que pase
       }
     },
     paginateInvoices() {
@@ -388,277 +247,44 @@ export default {
       this.currentPage = pageNumber;
       this.paginateInvoices();
     },
-    cerrarModal() {
-      this.mostrarResultados = false;
-      this.facturaEditando = null;
-    },
-    formatXML(xmlString) {
-      const PADDING = "  ";
-      const reg = /(>)(<)(\/*)/g;
-      let formatted = "";
-      let pad = 0;
-
-      xmlString = xmlString.replace(reg, "$1\r\n$2$3");
-      xmlString.split("\r\n").forEach((node) => {
-        let indent = 0;
-        if (node.match(/.+<\/\w[^>]*>$/)) {
-          indent = 0;
-        } else if (node.match(/^<\/\w/)) {
-          if (pad !== 0) pad -= 1;
-        } else if (node.match(/^<\w[^>]*[^/]>.*$/)) {
-          indent = 1;
-        } else {
-          indent = 0;
-        }
-
-        formatted += PADDING.repeat(pad) + node + "\r\n";
-        pad += indent;
-      });
-
-      return formatted.trim();
-    },
-    exportarResultados() {
-      const headers = [
-        "Fecha Docto", //Fecha Emision
-        "Tipo Docto", //33 Factura
-        "Nro Docto", //Folio
-        "Rut", //Receptor
-        "Nombre", //Receptor
-        "CTA Neto", //Total sin IVA
-        "CA Neto",
-        "Monto Neto",
-        "CTA Exento",
-        "CA Exento",
-        "CC Exento",
-        "COD SII Otro",
-        "CTA Otro",
-        "CC Otro",
-        "Monto Otro",
-        "% IVA", //19
-        "IVA", //Monto de IVA
-        "Total",
-        "Glosa", // Esta es la columna problemática
-      ];
-
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Facturas");
-
-      // Agregar encabezados con estilo
-      const headerRow = sheet.addRow(headers);
-      let jsonStr;
-      let parsedJson;
-      let rutReceptor;
-      headerRow.eachCell((cell) => {
-        cell.font = { name: "Calibri", size: 12, bold: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "7caff1" },
-        };
-        cell.alignment = {
-          horizontal: "center",
-          vertical: "middle",
-          wrapText: true,
-        };
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
-        };
-      });
-
-      // Agregar datos con formato
-      this.allInvoices.forEach((f) => {
-        jsonStr = f.xml;
-        parsedJson = JSON.parse(jsonStr);
-        // Extraer el RUT del receptor
-        rutReceptor = parsedJson.Encabezado.Receptor.RUTRecep;
-        const row = sheet.addRow([
-          this.formatDate(f.fecha), // Puedes ajustar esto si es string o Date
-          f.tipo_dte,
-          f.folio,
-          rutReceptor,
-          f.receptor,
-          f.neto,
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          this.iva * 100,
-          f.neto * this.iva,
-          f.neto * (1 + this.iva),
-          this.formatXML(f.xml),
-        ]);
-        row.eachCell((cell, colNumber) => {
-          cell.font = { name: "Calibri", size: 12 };
-          cell.alignment = {
-            horizontal: colNumber === 19 ? "left" : "center",
-            vertical: "middle",
-            wrapText: colNumber === 19, // Puedes dejar true si quieres scroll vertical interno
-          };
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" },
-          };
-
-          // Formato de fecha y moneda
-          if (colNumber === 1) {
-            cell.numFmt = "dd-mm-yyyy"; // Fecha
-          }
-          if (colNumber === 5) {
-            cell.numFmt = "#,##0"; // Total (moneda sin decimales)
-          }
-
-          // Ajustar el tamaño solo para la columna de "Glosa"
-          if (colNumber === 19) {
-            cell.alignment = {
-              horizontal: "left",
-              vertical: "top",
-              wrapText: false,
-              shrinkToFit: true,
-            };
-            cell.note = f.xml; // tooltip con todo el XML
-            let glosa = this.formatXML(f.xml);
-            if (glosa.length > 300) glosa = glosa.slice(0, 300) + " ...";
-          }
-        });
-      });
-
-      // Ajustar el ancho de las demás columnas, pero dejar la columna "Glosa" con un tamaño fijo
-      sheet.columns.forEach((column, colIndex) => {
-        if (colIndex !== 19) {
-          // Ignorar la columna de "Glosa" (19 es su índice)
-          let maxLength = 10;
-          column.eachCell({ includeEmpty: true }, (cell) => {
-            const value = cell.value ? cell.value.toString() : "";
-            maxLength = Math.max(maxLength, value.length);
-          });
-          column.width = maxLength + 2;
-        } else {
-          // Asignar un tamaño fijo para la columna de "Glosa"
-          column.width = 30; // Ajusta el número a lo que sea adecuado
-        }
-      });
-
-      // Generar y descargar el archivo
-      workbook.xlsx
-        .writeBuffer()
-        .then((buffer) => {
-          saveAs(new Blob([buffer]), "facturas_exportadas.xlsx");
-
-          this.mensajeExportacion =
-            "Exportación exitosa. El archivo Excel ha sido generado correctamente.";
-          setTimeout(() => {
-            this.isFadingOut = true;
-            setTimeout(() => {
-              this.mensaque rarahi si la escucho
-              7jeExportacion = "";
-              7jeExportacion = "";
-              this.isFadingOut = false;
-            }, 1000);
-          }, 2000);
-        })
-        .catch((error) => {
-          console.error("Error al generar el archivo Excel", error);
-          this.mensajeExportacion =
-            "Error al generar el archivo Excel. Por favor, intente nuevamente.";
-        });
+    enviarMensaje(mensajeNuevo) {
+      this.mensaje = mensajeNuevo;
+      setTimeout(() => {
+        this.isFadingOut = true;
+        setTimeout(() => {
+          this.mensaje = "";
+          this.isFadingOut = false;
+        }, 1000);
+      }, 2000);
     },
   },
 };
 </script>
 
 <style scoped>
-/* Contenedor principal para centrar todo el contenido */
+/* Estilos usados en BuscarFacturas.vue */
+
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  height: 100vh;
-  background: linear-gradient(135deg, #dbeeff, #f1f9ff);
+  background: transparent;
+  height: 80vh;
 }
 
-.title {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 30px;
-}
-
-/* Estilos para el formulario */
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
-.formulario {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  font-size: 14px;
-  color: #333;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  border-color: #0070c9;
-  outline: none;
-}
-
-button {
-  width: 100%;
-  max-width: 80px;
-  padding: 12px;
-  font-size: 16px;
-  background-color: #0070c9;
+.fade-message {
+  transition: opacity 1s ease-out;
+  opacity: 1;
+  background-color: #4caf50;
   color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+  z-index: 9999;
 }
 
-button:hover {
-  background-color: #005ba1;
+.fade-message.fade-out {
+  opacity: 0;
 }
 
-button:active {
-  background-color: #003d7a;
-}
-
-/* Estilos para la carga y modales */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -669,132 +295,28 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #0070c9;
+  border-top: 6px solid #aad5ee;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
+  width: 120px;
+  height: 120px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto 0;
+  z-index: 99999;
 }
 
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
-
   100% {
     transform: rotate(360deg);
   }
 }
 
-/* Estilos para la tabla de resultados */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  table-layout: fixed;
-  /* Asegura que las columnas tengan el mismo ancho */
-}
-
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  /* más compacto */
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-th {
-  background-color: #f1f1f1;
-  font-weight: bold;
-}
-
-td button {
-  padding: 6px 12px;
-  background-color: #0070c9;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-td button:hover {
-  background-color: #005ba1;
-}
-
-/* Paginación */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.pagination button {
-  padding: 8px 12px;
-  font-size: 14px;
-  background-color: #0070c9;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.pagination span {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-}
-
-/* Estilos de los modales */
-.modal-buttons button {
-  padding: 8px 16px;
-  background-color: #0070c9;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 4px;
-  width: auto;
-  height: auto;
-}
-
-.modal-buttons button:hover {
-  background-color: #005ba1;
-}
-
-.modal-buttons button:active {
-  background-color: #003d7a;
-}
-
-.table > :not(caption) > * > * {
-  padding: 0.2rem 0.2rem;
-  text-align: center;
-  color: var(
-    --bs-table-color-state,
-    var(--bs-table-color-type, var(--bs-table-color))
-  );
-  background-color: var(--bs-table-bg);
-  border-bottom-width: var(--bs-border-width);
-  box-shadow: inset 0 0 0 9999px
-    var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));
-}
-
-/* Eliminar el foco en el modal al hacer clic fuera de él */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -809,55 +331,42 @@ td button:hover {
 }
 
 .modal-content {
+  align-items: center;
   position: relative;
-  /* Importante para posicionar la X en la esquina */
+  gap: 12px;
+  display: flex;
   background: white;
   padding: 20px;
   border-radius: 12px;
-  width: 90%;
-  /* max-width: 500px; */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   font-size: 14px;
+  width: auto;
+  text-align: center;
 }
 
-.modal-content button {
-  padding: 8px 16px;
-  font-size: 10px;
-  /* Cambia el tamaño de la fuente */
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.modal-buttons button {
+  padding: 8px;
   background-color: #0070c9;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.modal-close-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 20px;
-  font-weight: bold;
-  background: none;
-  border: none;
-  color: #0070c9;
-  cursor: pointer;
-  transition: color 0.3s ease;
   width: auto;
+  height: auto;
 }
 
-.modal-close-btn:hover {
-  color: #005ba1;
-}
-
-.modal-close-btn:active {
-  color: #003d7a;
-}
-
-.modal-content button:hover {
+.modal-buttons button:hover {
   background-color: #005ba1;
 }
 
-.modal-content button:active {
+.modal-buttons button:active {
   background-color: #003d7a;
 }
 
@@ -886,36 +395,11 @@ td button:hover {
   transform: scale(0.95);
 }
 
-.fade-message {
-  transition: opacity 1s ease-out;
-  opacity: 1;
-  background-color: #4caf50;
-  /* Verde de éxito */
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 10px;
-  text-align: center;
-  z-index: 9999;
-}
-
-.fade-message.fade-out {
-  opacity: 0;
-}
-
-.exportar-btn {
-  background-color: #28a745 !important;
-  /* Verde */
-  color: white;
-  border: none;
+select {
+  width: 100%;
+  padding: 8px;
   border-radius: 4px;
-  cursor: pointer;
-  padding: 8px 16px;
-  font-size: 14px;
-  margin-left: 90px;
+  border: 1px solid #ccc;
+  margin-top: 10px;
 }
-.texto-verde {
-  color: green;
-}
-
 </style>

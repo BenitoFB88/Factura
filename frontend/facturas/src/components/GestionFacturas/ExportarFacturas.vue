@@ -1,8 +1,12 @@
 <template>
   <div>
-    <button @click="exportarResultados">Exportar a Excel</button>
-    <p v-if="mensajeExportacion" :class="{ fadeOut: isFadingOut }">{{ mensajeExportacion }}</p>
+    <button @click="exportarResultados" class="exportar-btn">
+      Exportar a Excel
+    </button>
   </div>
+  <p v-if="mensajeExportacion" :class="{ fadeOut: isFadingOut }">
+    {{ mensajeExportacion }}
+  </p>
 </template>
 
 <script>
@@ -11,14 +15,18 @@ import { saveAs } from "file-saver";
 
 export default {
   name: "ExportarFacturas",
+  props: {
+    allInvoices: {
+      type: Array,
+      required: true,
+      default: () => [], // evita errores si no llega nada
+    },
+  },
   data() {
     return {
-      allInvoices: [
-        // Ejemplo de datos, reemplázalos con tus datos reales
-        { fecha: new Date(), emisor: "Empresa A", receptor: "Cliente B", folio: 123, total: 10000, codigo_analisis: "ABC123" },
-      ],
       mensajeExportacion: "",
       isFadingOut: false,
+      iva: 0.19, // parece que lo usas pero no estaba definido
     };
   },
   methods: {
@@ -29,21 +37,74 @@ export default {
       const year = d.getFullYear();
       return `${day}-${month}-${year}`;
     },
+    formatXML(xmlString) {
+      const PADDING = "  ";
+      const reg = /(>)(<)(\/*)/g;
+      let formatted = "";
+      let pad = 0;
+
+      xmlString = xmlString.replace(reg, "$1\r\n$2$3");
+      xmlString.split("\r\n").forEach((node) => {
+        let indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+          indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+          if (pad !== 0) pad -= 1;
+        } else if (node.match(/^<\w[^>]*[^/]>.*$/)) {
+          indent = 1;
+        } else {
+          indent = 0;
+        }
+
+        formatted += PADDING.repeat(pad) + node + "\r\n";
+        pad += indent;
+      });
+
+      return formatted.trim();
+    },
     exportarResultados() {
-      const headers = ["Fecha", "Emisor", "Receptor", "Folio", "Total", "Código Análisis"];
+      const headers = [
+        "Fecha Docto", //Fecha Emision
+        "Tipo Docto", //33 Factura
+        "Nro Docto", //Folio
+        "Rut", //Receptor
+        "Nombre", //Receptor
+        "CTA Neto", //Total sin IVA
+        "CA Neto",
+        "Monto Neto",
+        "CTA Exento",
+        "CA Exento",
+        "CC Exento",
+        "COD SII Otro",
+        "CTA Otro",
+        "CC Otro",
+        "Monto Otro",
+        "% IVA", //19
+        "IVA", //Monto de IVA
+        "Total",
+        "Glosa", // Esta es la columna problemática
+      ];
+
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Facturas");
 
-      // Encabezados
+      // Agregar encabezados con estilo
       const headerRow = sheet.addRow(headers);
+      let jsonStr;
+      let parsedJson;
+      let rutReceptor;
       headerRow.eachCell((cell) => {
         cell.font = { name: "Calibri", size: 12, bold: true };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FFFF00" },
+          fgColor: { argb: "7caff1" },
         };
-        cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true,
+        };
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -52,63 +113,134 @@ export default {
         };
       });
 
-      // Filas de datos
+      // Agregar datos con formato
       this.allInvoices.forEach((f) => {
+        jsonStr = f.xml;
+        parsedJson = JSON.parse(jsonStr);
+        // Extraer el RUT del receptor
+        rutReceptor = parsedJson.Encabezado.Receptor.RUTRecep;
         const row = sheet.addRow([
-          this.formatDate(f.fecha),
-          f.emisor,
-          f.receptor,
+          this.formatDate(f.fecha), // Puedes ajustar esto si es string o Date
+          f.tipo_dte,
           f.folio,
-          f.total,
-          f.codigo_analisis,
+          rutReceptor,
+          f.receptor,
+          f.neto,
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          this.iva * 100,
+          f.neto * this.iva,
+          f.neto * (1 + this.iva),
+          this.formatXML(f.xml),
         ]);
         row.eachCell((cell, colNumber) => {
           cell.font = { name: "Calibri", size: 12 };
-          cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+          cell.alignment = {
+            horizontal: colNumber === 19 ? "left" : "center",
+            vertical: "middle",
+            wrapText: colNumber === 19, // Puedes dejar true si quieres scroll vertical interno
+          };
           cell.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },
             right: { style: "thin" },
           };
-          if (colNumber === 1) cell.numFmt = "dd-mm-yyyy";
-          if (colNumber === 5) cell.numFmt = "#,##0";
+
+          // Formato de fecha y moneda
+          if (colNumber === 1) {
+            cell.numFmt = "dd-mm-yyyy"; // Fecha
+          }
+          if (colNumber === 5) {
+            cell.numFmt = "#,##0"; // Total (moneda sin decimales)
+          }
+
+          // Ajustar el tamaño solo para la columna de "Glosa"
+          if (colNumber === 19) {
+            cell.alignment = {
+              horizontal: "left",
+              vertical: "top",
+              wrapText: false,
+              shrinkToFit: true,
+            };
+            cell.note = f.xml; // tooltip con todo el XML
+            let glosa = this.formatXML(f.xml);
+            if (glosa.length > 300) glosa = glosa.slice(0, 300) + " ...";
+          }
         });
       });
 
-      // Ajustar ancho de columnas
-      sheet.columns.forEach((column) => {
-        let maxLength = 10;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-          const value = cell.value ? cell.value.toString() : "";
-          maxLength = Math.max(maxLength, value.length);
-        });
-        column.width = maxLength + 2;
+      // Ajustar el ancho de las demás columnas, pero dejar la columna "Glosa" con un tamaño fijo
+      sheet.columns.forEach((column, colIndex) => {
+        if (colIndex !== 19) {
+          // Ignorar la columna de "Glosa" (19 es su índice)
+          let maxLength = 10;
+          column.eachCell({ includeEmpty: true }, (cell) => {
+            const value = cell.value ? cell.value.toString() : "";
+            maxLength = Math.max(maxLength, value.length);
+          });
+          column.width = maxLength + 2;
+        } else {
+          // Asignar un tamaño fijo para la columna de "Glosa"
+          column.width = 30; // Ajusta el número a lo que sea adecuado
+        }
       });
 
-      // Exportar
-      workbook.xlsx.writeBuffer().then((buffer) => {
-        saveAs(new Blob([buffer]), "facturas_exportadas.xlsx");
-        this.mensajeExportacion = "Exportación exitosa. El archivo Excel ha sido generado correctamente.";
-        setTimeout(() => {
-          this.isFadingOut = true;
+      // Generar y descargar el archivo
+      workbook.xlsx
+        .writeBuffer()
+        .then((buffer) => {
+          saveAs(new Blob([buffer]), "facturas_exportadas.xlsx");
+
+          this.mensajeExportacion =
+            "Exportación exitosa. El archivo Excel ha sido generado correctamente.";
           setTimeout(() => {
-            this.mensajeExportacion = "";
-            this.isFadingOut = false;
-          }, 1000);
-        }, 2000);
-      }).catch((error) => {
-        console.error("Error al generar el archivo Excel", error);
-        this.mensajeExportacion = "Error al generar el archivo Excel. Por favor, intente nuevamente.";
-      });
+            this.isFadingOut = true;
+            setTimeout(() => {
+              this.mensajeExportacion = "";
+              this.isFadingOut = false;
+            }, 1000);
+          }, 2000);
+        })
+        .catch((error) => {
+          console.error("Error al generar el archivo Excel", error);
+          this.mensajeExportacion =
+            "Error al generar el archivo Excel. Por favor, intente nuevamente.";
+        });
     },
   },
 };
 </script>
 
 <style scoped>
+p {
+  font-size: 16px;
+  font-weight: bold;
+  color: #5ace8e;
+  margin-top: 10px;
+  position: absolute;
+  top: 20px;
+  right: 120px;
+}
+
 .fadeOut {
+  color: #5ace8e;
   animation: fadeOut 1s forwards;
+}
+
+.exportar-btn {
+  padding: 8px 16px;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 60px;
 }
 
 @keyframes fadeOut {

@@ -20,14 +20,20 @@
 
 <script>
 export default {
-  name: 'FacturaSidebar'
+  name: "FacturaSidebar",
 };
 </script>
 
 <style scoped>
 .layout {
   display: flex;
-  min-height: 100vh;
+  min-height: 80vh;
+  background:linear-gradient(
+    to bottom,
+    #e7ebed 0%,
+    #eef2f4 100%
+  );
+  
 }
 
 .sidebar {
@@ -36,6 +42,7 @@ export default {
   color: white;
   padding: 20px;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  min-height: 90vh;
 }
 
 .sidebar-title {
@@ -61,8 +68,8 @@ export default {
 }
 
 .content {
-  flex: 1;
+  margin: auto;
   padding: 30px;
-  background-color: #f9fbff;
+  background-color: transparent;
 }
 </style>
