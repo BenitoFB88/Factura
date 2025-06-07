@@ -7,6 +7,8 @@ use App\Http\Controllers\InvoiceManagerController;
 use App\External\Icontador;
 use App\Http\Controllers\Api\IcontadorController;
 
+use  App\Http\Controllers\DteEmitidoController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +17,8 @@ use App\Http\Controllers\Api\IcontadorController;
 | Aquí puedes registrar las rutas de tu API.
 | Estas rutas están protegidas con el middleware 'api' por defecto.
 */
+
+Route::post('traerfolio','DteEmitidoController@listarDTEDesdeFolioAmas');
 
 Route::options('{any}', function () {
     return response()->json([], 204);

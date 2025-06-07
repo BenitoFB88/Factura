@@ -138,4 +138,22 @@ class DteEmitidoController extends Controller
         return response()->json($resultados);
     }
 
+    public function listarDTEDesdeFolioAmas(Request $request)
+    {
+        
+        $folio = $request->input('folio');
+    
+        if (empty($folio) || !is_numeric($folio)) {
+            return response()->json(['error' => 'Debe proporcionar un número de folio válido'], 400);
+        }
+    
+        // Consulta todos los DTE desde ese folio en adelante, ordenados por folio ascendente
+        $dtes = DteEmitido::where('folio', '>=', $folio)
+            ->orderBy('folio', 'asc')
+            ->get();
+    
+        return response()->json($dtes);
+    }
+
+
 }
