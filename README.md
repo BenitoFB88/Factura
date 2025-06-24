@@ -121,7 +121,28 @@ en el front se puede loguear con el usuario= 'juan@example.com' pass= '123456'
 
 
 
+Para ingresar al contenedor de laravel
+docker exec -it laravel_app bash
 
+Instalar Laravel Passport
+composer require laravel/passport "^7.0"
+
+php artisan vendor:publish --tag=passport-migrations
+php artisan migrate
+
+Para crear usuario de passport dentro del contenedor de docker
+php artisan passport:client --password
+
+Copiar el id y la password entregadas en el archivo .env
+PASSPORT_CLIENT_ID=X
+PASSPORT_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+ejecutar php artisan serve --port=8081
+
+y luego correo en la raiz del front 'npm install'
+y por ultimo 'npm run serve'
+
+en el front se puede loguear con el usuario= 'juan@example.com' pass= '123456'
 
 
 
