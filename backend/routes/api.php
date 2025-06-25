@@ -26,7 +26,10 @@ Route::post('/login', 'Auth\LoginController@login');
 
 Route::get('/prueba', 'ConsumoBBDDController@prueba');
 
-
+// Obtener datos del usuario autenticado
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 //rutas protegeidas
 Route::middleware(['auth:api'])->group(function () {
     Route::post('/actualizarcodigos', 'Api\IcontadorController@actualizarcodigos');
@@ -38,10 +41,6 @@ Route::middleware(['auth:api'])->group(function () {
 // Ver todas las facturas
     Route::get('invoices', [InvoiceManagerController::class, 'index']);
 
-    // Obtener datos del usuario autenticado
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
     // Buscar facturas
     Route::get('invoices/search', [InvoiceManagerController::class, 'search']);
 

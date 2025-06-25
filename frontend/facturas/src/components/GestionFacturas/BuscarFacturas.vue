@@ -169,7 +169,7 @@ export default {
 
         this.sanitizarDatos();
         const params = { ...this.searchParams };
-        const response = await axios.get("http://localhost/api/buscar-dte", {
+        const response = await axios.get("http://localhost:8081/api/buscar-dte", {
           params,
           headers: { Authorization: `Bearer ${token}` },
         });

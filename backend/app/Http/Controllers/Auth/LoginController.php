@@ -21,6 +21,7 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        \Log::info('Login request data:', $request->all());
         $email = $request->input('email') ?? $request->json('email');
         $password = $request->input('password') ?? $request->json('password');
 
